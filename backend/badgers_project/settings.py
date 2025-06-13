@@ -160,7 +160,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "https://badgersadmin.netlify.app",
 ]
-]
+
 CORS_ALLOW_ALL_HEADERS = True
 CORS_ALLOW_CREDENTIALS = True
 # Configuración de Medios (para las fotos)
