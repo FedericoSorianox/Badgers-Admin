@@ -1,15 +1,12 @@
-// src/pages/FinanzasPage.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import apiClient from '../api';
 import { 
-    Grid, Card, CardContent, Typography, TextField, Select, MenuItem, 
-    FormControl, InputLabel, Paper, Button, Box, Container,
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    IconButton, Dialog, DialogTitle, DialogContent, DialogActions
-} from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
+    Card, Row, Col, Container, Button, Form, Table,
+    Modal, ListGroup
+} from '@themesberg/react-bootstrap';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash, faMoneyBill } from '@fortawesome/free-solid-svg-icons';
 
 const FinanzasPage = () => {
     const [pagos, setPagos] = useState([]);
@@ -20,6 +17,9 @@ const FinanzasPage = () => {
     const [filterType, setFilterType] = useState('todos');
     const [gananciaBruta, setGananciaBruta] = useState('');
     const [resultados, setResultados] = useState(null);
+    const [horasFede, setHorasFede] = useState(40);
+    const [horasGuille, setHorasGuille] = useState(16);
+    const [horasGonza, setHorasGonza] = useState(8);
     
     const today = new Date();
     const [year, setYear] = useState(today.getFullYear());
@@ -70,6 +70,17 @@ const FinanzasPage = () => {
             gananciaNeta: (ingresosCuotas + ingresosVentas) - totalGastos
         };
     }, [pagos, ventas, gastos, year, month]);
+
+    useEffect(() => {
+        setGananciaBruta(filteredData.gananciaNeta.toFixed(2));
+    }, [filteredData.gananciaNeta]);
+
+    useEffect(() => {
+        if (!isNaN(parseFloat(gananciaBruta)) && parseFloat(gananciaBruta) >= 0) {
+            calcularReparto();
+        }
+        // eslint-disable-next-line
+    }, [gananciaBruta, horasFede, horasGuille, horasGonza]);
 
     const handleAddGasto = async (e) => {
         e.preventDefault();
@@ -140,43 +151,27 @@ const FinanzasPage = () => {
             alert('Por favor, ingrese un valor válido para la ganancia bruta.');
             return;
         }
-
-        // Parámetros configurables
         const PORCENTAJE_PARA_SALARIOS = 0.60;
         const semanas_por_mes = 4;
-        const horas_socio_1 = 10;  // Fede
-        const horas_socio_2 = 4;   // Guille
-        const horas_socio_3 = 2;   // Gonza
+        const horas_socio_1 = horasFede;
+        const horas_socio_2 = horasGuille;
+        const horas_socio_3 = horasGonza;
         const numero_de_socios = 3;
-
-        // 1. Calcular pool de salarios
         const pool_de_salarios = ganancia * PORCENTAJE_PARA_SALARIOS;
-
-        // 2. Calcular total de horas
-        const total_horas_mensuales = (horas_socio_1 + horas_socio_2 + horas_socio_3) * semanas_por_mes;
-
+        const total_horas_mensuales = (horas_socio_1 + horas_socio_2 + horas_socio_3);
         let valor_hora_variable = 0;
         let salario_socio_1 = 0, salario_socio_2 = 0, salario_socio_3 = 0;
-
         if (total_horas_mensuales > 0) {
-            // 3. Calcular valor hora variable
             valor_hora_variable = pool_de_salarios / total_horas_mensuales;
-
-            // 4. Calcular salarios
-            salario_socio_1 = (horas_socio_1 * semanas_por_mes) * valor_hora_variable;
-            salario_socio_2 = (horas_socio_2 * semanas_por_mes) * valor_hora_variable;
-            salario_socio_3 = (horas_socio_3 * semanas_por_mes) * valor_hora_variable;
+            salario_socio_1 = horas_socio_1 * valor_hora_variable;
+            salario_socio_2 = horas_socio_2 * valor_hora_variable;
+            salario_socio_3 = horas_socio_3 * valor_hora_variable;
         }
-
-        // 5. Calcular ganancia remanente
         const ganancia_remanente = ganancia - pool_de_salarios;
         const ganancia_por_inversion = ganancia_remanente / numero_de_socios;
-
-        // 6. Calcular totales finales
         const total_socio_1 = salario_socio_1 + ganancia_por_inversion;
         const total_socio_2 = salario_socio_2 + ganancia_por_inversion;
         const total_socio_3 = salario_socio_3 + ganancia_por_inversion;
-
         setResultados({
             pool_de_salarios,
             valor_hora_variable,
@@ -189,66 +184,91 @@ const FinanzasPage = () => {
     };
 
     return (
-        <Box sx={{
-            minHeight: '100vh',
-            width: '100%',
-            background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-            py: { xs: 3, md: 6 },
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-        }}>
-            <Container maxWidth={false} sx={{
-                px: { xs: 2, sm: 3, md: 4 },
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-            }}>
-                <Typography
-                    variant="h2"
-                    gutterBottom
-                    align="center"
-                    sx={{
-                        fontWeight: 900,
-                        mb: 8,
-                        background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-                        backgroundClip: 'text',
-                        textFillColor: 'transparent',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        fontSize: { xs: '2.5rem', md: '3.5rem' },
-                    }}
-                >
-                    Gestión de Finanzas
-                </Typography>
-                <Paper sx={{ p: 2, mb: 3, display: 'flex', gap: 2 }}>
-                    <FormControl>
-                        <InputLabel>Año</InputLabel>
-                        <Select value={year} label="Año" onChange={e => setYear(e.target.value)}>
-                            {years.map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
-                        </Select>
-                    </FormControl>
-                    <FormControl>
-                        <InputLabel>Mes</InputLabel>
-                        <Select value={month} label="Mes" onChange={e => setMonth(e.target.value)}>
-                            {months.map((m, i) => <MenuItem key={m} value={i}>{m}</MenuItem>)}
-                        </Select>
-                    </FormControl>
-                </Paper>
+        <Container fluid className="px-0">
+            <Row className="justify-content-center">
+                <Col xl={10} lg={12}>
+                    <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
+                        <h1 className="h2 mb-0 text-center w-100">Gestión de Finanzas</h1>
+                    </div>
 
-                <Grid container spacing={2} mb={4}>
-                    <Grid item xs={6} md={3}><Card><CardContent><Typography>Ingresos por Cuotas</Typography><Typography variant="h5">${filteredData.ingresosCuotas.toFixed(2)}</Typography></CardContent></Card></Grid>
-                    <Grid item xs={6} md={3}><Card><CardContent><Typography>Ingresos por Ventas</Typography><Typography variant="h5">${filteredData.ingresosVentas.toFixed(2)}</Typography></CardContent></Card></Grid>
-                    <Grid item xs={6} md={3}><Card><CardContent><Typography>Gastos Totales</Typography><Typography variant="h5" color="error">${filteredData.totalGastos.toFixed(2)}</Typography></CardContent></Card></Grid>
-                    <Grid item xs={6} md={3}><Card><CardContent><Typography>Ganancia Neta</Typography><Typography variant="h5" color={filteredData.gananciaNeta >= 0 ? 'success.main' : 'error'}>${filteredData.gananciaNeta.toFixed(2)}</Typography></CardContent></Card></Grid>
-                </Grid>
-                
-                <Grid container spacing={4}>
-                    <Grid item xs={12} md={6}>
-                        <Typography variant="h6">Resumen Gráfico</Typography>
+                    <Row className="mb-4 g-4">
+                        <Col xs={12} md={6} lg={3}>
+                            <Card className="shadow border-0 w-100 bg-white text-center p-3">
+                                <div className="d-flex flex-column align-items-center justify-content-center h-100">
+                                    <span className="icon icon-lg bg-success text-white rounded-circle d-flex align-items-center justify-content-center mb-3" style={{ width: 56, height: 56, fontSize: 32 }}>
+                                        <FontAwesomeIcon icon={faMoneyBill} />
+                                    </span>
+                                    <Card.Title as="h6" className="mb-2 text-uppercase text-muted small">Ingresos por Cuotas</Card.Title>
+                                    <h3 className="text-success fw-bold mb-0" style={{ fontSize: '2rem' }}>${filteredData.ingresosCuotas.toFixed(2)}</h3>
+                                </div>
+                            </Card>
+                        </Col>
+                        <Col xs={12} md={6} lg={3}>
+                            <Card className="shadow border-0 w-100 bg-white text-center p-3">
+                                <div className="d-flex flex-column align-items-center justify-content-center h-100">
+                                    <span className="icon icon-lg bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mb-3" style={{ width: 56, height: 56, fontSize: 32 }}>
+                                        <FontAwesomeIcon icon={faMoneyBill} />
+                                    </span>
+                                    <Card.Title as="h6" className="mb-2 text-uppercase text-muted small">Ingresos por Ventas</Card.Title>
+                                    <h3 className="text-primary fw-bold mb-0" style={{ fontSize: '2rem' }}>${filteredData.ingresosVentas.toFixed(2)}</h3>
+                                </div>
+                            </Card>
+                        </Col>
+                        <Col xs={12} md={6} lg={3}>
+                            <Card className="shadow border-0 w-100 bg-white text-center p-3">
+                                <div className="d-flex flex-column align-items-center justify-content-center h-100">
+                                    <span className="icon icon-lg bg-danger text-white rounded-circle d-flex align-items-center justify-content-center mb-3" style={{ width: 56, height: 56, fontSize: 32 }}>
+                                        <FontAwesomeIcon icon={faMoneyBill} />
+                                    </span>
+                                    <Card.Title as="h6" className="mb-2 text-uppercase text-muted small">Gastos Totales</Card.Title>
+                                    <h3 className="text-danger fw-bold mb-0" style={{ fontSize: '2rem' }}>${filteredData.totalGastos.toFixed(2)}</h3>
+                                </div>
+                            </Card>
+                        </Col>
+                        <Col xs={12} md={6} lg={3}>
+                            <Card className="shadow border-0 w-100 bg-white text-center p-3">
+                                <div className="d-flex flex-column align-items-center justify-content-center h-100">
+                                    <span className="icon icon-lg bg-warning text-white rounded-circle d-flex align-items-center justify-content-center mb-3" style={{ width: 56, height: 56, fontSize: 32 }}>
+                                        <FontAwesomeIcon icon={faMoneyBill} />
+                                    </span>
+                                    <Card.Title as="h6" className="mb-2 text-uppercase text-muted small">Ganancia Neta</Card.Title>
+                                    <h3 className={`${filteredData.gananciaNeta >= 0 ? 'text-success' : 'text-danger'} fw-bold mb-0`} style={{ fontSize: '2rem' }}>
+                                        ${filteredData.gananciaNeta.toFixed(2)}
+                                    </h3>
+                                </div>
+                            </Card>
+                        </Col>
+                    </Row>
+                    <Row className="mb-4 g-4">
+                        <Col xs={12} md={6}>
+                            <Card className="shadow border-0 w-100 bg-white p-3">
+                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                    <Form.Group className="mb-0 d-flex align-items-center gap-2">
+                                        <Form.Label className="mb-0">Mes</Form.Label>
+                                        <Form.Select
+                                            value={month}
+                                            onChange={e => setMonth(Number(e.target.value))}
+                                            style={{ width: '120px' }}
+                                        >
+                                            {months.map((mes, idx) => (
+                                                <option key={idx} value={idx}>{mes}</option>
+                                            ))}
+                                        </Form.Select>
+                                    </Form.Group>
+                                    <Form.Group className="mb-0 d-flex align-items-center gap-2">
+                                        <Form.Label className="mb-0">Año</Form.Label>
+                                        <Form.Select
+                                            value={year}
+                                            onChange={e => setYear(Number(e.target.value))}
+                                            style={{ width: '100px' }}
+                                        >
+                                            {years.map(y => (
+                                                <option key={y} value={y}>{y}</option>
+                                            ))}
+                                        </Form.Select>
+                                    </Form.Group>
+                                </div>
+                                <Card.Title as="h4" className="mb-4 text-center text-primary">Resumen Gráfico</Card.Title>
                         <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={[{ name: 'Resumen', Ingresos: filteredData.totalIngresos, Gastos: filteredData.totalGastos }]}>
                                 <CartesianGrid strokeDasharray="3 3" />
@@ -260,61 +280,145 @@ const FinanzasPage = () => {
                                 <Bar dataKey="Gastos" fill="red" />
                             </BarChart>
                         </ResponsiveContainer>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                        <Typography variant="h6">Registrar Nuevo Gasto</Typography>
-                        <Paper component="form" onSubmit={handleAddGasto} sx={{p: 2}}>
-                            <TextField name="concepto" label="Concepto" fullWidth required margin="normal" />
-                            <TextField name="monto" label="Monto" type="number" inputProps={{step: "0.01"}} fullWidth required margin="normal" />
-                            <TextField name="fecha" type="date" fullWidth required margin="normal" defaultValue={today.toISOString().split('T')[0]}/>
-                            <FormControl fullWidth margin="normal">
-                                <InputLabel>Categoría</InputLabel>
-                                <Select name="categoria" label="Categoría" defaultValue="Otros">
-                                    <MenuItem value="Alquiler">Alquiler</MenuItem>
-                                    <MenuItem value="Servicios">Servicios</MenuItem>
-                                    <MenuItem value="Sueldos">Sueldos</MenuItem>
-                                    <MenuItem value="Equipamiento">Equipamiento</MenuItem>
-                                    <MenuItem value="Marketing">Marketing</MenuItem>
-                                    <MenuItem value="Otros">Otros</MenuItem>
-                                </Select>
-                            </FormControl>
-                            <Button type="submit" variant="contained" sx={{mt: 2}}>Registrar Gasto</Button>
-                        </Paper>
-                    </Grid>
-                </Grid>
+                            </Card>
+                        </Col>
+                        <Col xs={12} md={6}>
+                            <Card className="shadow border-0 w-100 bg-white p-3">
+                                <Card.Title as="h4" className="mb-4 text-center text-primary">Registrar Nuevo Gasto</Card.Title>
+                                <Form onSubmit={handleAddGasto}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Concepto</Form.Label>
+                                        <Form.Control name="concepto" type="text" required />
+                                    </Form.Group>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Monto</Form.Label>
+                                        <Form.Control name="monto" type="number" step="0.01" required />
+                                    </Form.Group>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Fecha</Form.Label>
+                                        <Form.Control name="fecha" type="date" defaultValue={today.toISOString().split('T')[0]} required />
+                                    </Form.Group>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Categoría</Form.Label>
+                                        <Form.Select name="categoria" defaultValue="Otros">
+                                            <option value="Alquiler">Alquiler</option>
+                                            <option value="Servicios">Servicios</option>
+                                            <option value="Sueldos">Sueldos</option>
+                                            <option value="Equipamiento">Equipamiento</option>
+                                            <option value="Marketing">Marketing</option>
+                                            <option value="Otros">Otros</option>
+                                        </Form.Select>
+                                    </Form.Group>
+                                    <Button type="submit" variant="primary" className="w-100">Registrar Gasto</Button>
+                                </Form>
+                            </Card>
+                        </Col>
+                    </Row>
+                    <Row className="mb-4">
+                        <Col xs={12}>
+                            <Card className="shadow border-0 w-100 bg-white p-3">
+                                <Card.Title as="h4" className="mb-4 text-center text-primary">Calculadora de Reparto para The Badgers</Card.Title>
+                                <Form.Group className="mb-4">
+                                    <Form.Label>Ganancia Bruta Mensual</Form.Label>
+                                    <div className="input-group mb-3">
+                                        <span className="input-group-text">
+                                            <FontAwesomeIcon icon={faMoneyBill} />
+                                        </span>
+                                        <Form.Control
+                                            type="number"
+                                            value={gananciaBruta}
+                                            onChange={(e) => setGananciaBruta(e.target.value)}
+                                        />
+                                    </div>
+                                    <Row className="mb-3">
+                                        <Col xs={12} md={4} className="mb-2 mb-md-0">
+                                            <Form.Label>Horas Fede</Form.Label>
+                                            <Form.Control type="number" value={horasFede} min={0} onChange={e => setHorasFede(Number(e.target.value))} />
+                                        </Col>
+                                        <Col xs={12} md={4} className="mb-2 mb-md-0">
+                                            <Form.Label>Horas Guille</Form.Label>
+                                            <Form.Control type="number" value={horasGuille} min={0} onChange={e => setHorasGuille(Number(e.target.value))} />
+                                        </Col>
+                                        <Col xs={12} md={4}>
+                                            <Form.Label>Horas Gonza</Form.Label>
+                                            <Form.Control type="number" value={horasGonza} min={0} onChange={e => setHorasGonza(Number(e.target.value))} />
+                                        </Col>
+                                    </Row>
+                                    {resultados && (
+                                        <div className="mb-4 text-center">
+                                            <span className="fw-bold">Valor por hora de clase: </span>
+                                            <span>${resultados.valor_hora_variable.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        </div>
+                                    )}
+                                </Form.Group>
+                                <Button 
+                                    variant="primary" 
+                                    onClick={calcularReparto}
+                                    className="w-100 mb-4"
+                                >
+                                    Calcular Reparto
+                                </Button>
 
-                {/* New Financial History Section */}
-                <Box sx={{ mt: 4, width: '100%' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="h5">
-                            Historial Financiero
-                        </Typography>
-                        <FormControl sx={{ minWidth: 200 }}>
-                            <InputLabel>Filtrar por tipo</InputLabel>
-                            <Select
+                                {resultados && (
+                                    <>
+                                        <Row>
+                                            <Col xs={12} md={4}>
+                                                <Card className="shadow border-0 w-100 bg-white text-center p-3">
+                                                    <Card.Title as="h6" className="mb-2 text-uppercase text-muted small">Fede ({horasFede}hs/mes)</Card.Title>
+                                                    <h3 className="text-primary fw-bold mb-0" style={{ fontSize: '2rem' }}>
+                                                        ${resultados.total_socio_1.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                    </h3>
+                                                </Card>
+                                            </Col>
+                                            <Col xs={12} md={4}>
+                                                <Card className="shadow border-0 w-100 bg-white text-center p-3">
+                                                    <Card.Title as="h6" className="mb-2 text-uppercase text-muted small">Guille ({horasGuille}hs/mes)</Card.Title>
+                                                    <h3 className="text-primary fw-bold mb-0" style={{ fontSize: '2rem' }}>
+                                                        ${resultados.total_socio_2.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                    </h3>
+                                                </Card>
+                                            </Col>
+                                            <Col xs={12} md={4}>
+                                                <Card className="shadow border-0 w-100 bg-white text-center p-3">
+                                                    <Card.Title as="h6" className="mb-2 text-uppercase text-muted small">Gonza ({horasGonza}hs/mes)</Card.Title>
+                                                    <h3 className="text-primary fw-bold mb-0" style={{ fontSize: '2rem' }}>
+                                                        ${resultados.total_socio_3.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                    </h3>
+                                                </Card>
+                                            </Col>
+                                        </Row>
+                                    </>
+                                )}
+                            </Card>
+                        </Col>
+                    </Row>
+                    <Row className="mb-4">
+                        <Col xs={12}>
+                            <Card className="shadow border-0 w-100 bg-white p-3">
+                                <Card.Title as="h4" className="mb-4 text-center text-primary">Historial Financiero</Card.Title>
+                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                    <Form.Select 
                                 value={filterType}
-                                label="Filtrar por tipo"
                                 onChange={(e) => setFilterType(e.target.value)}
-                            >
-                                <MenuItem value="todos">Todos los registros</MenuItem>
-                                <MenuItem value="pagos">Pagos</MenuItem>
-                                <MenuItem value="ventas">Ventas</MenuItem>
-                                <MenuItem value="gastos">Gastos</MenuItem>
-                            </Select>
-                        </FormControl>
-                    </Box>
-                    <TableContainer component={Paper}>
-                        <Table>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>Fecha</TableCell>
-                                    <TableCell>Tipo</TableCell>
-                                    <TableCell>Concepto</TableCell>
-                                    <TableCell>Monto</TableCell>
-                                    <TableCell>Acciones</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
+                                        style={{ width: '200px' }}
+                                    >
+                                        <option value="todos">Todos los registros</option>
+                                        <option value="pagos">Pagos</option>
+                                        <option value="ventas">Ventas</option>
+                                        <option value="gastos">Gastos</option>
+                                    </Form.Select>
+                                </div>
+                                <Table responsive hover className="user-table align-items-center">
+                                    <thead className="bg-light">
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Tipo</th>
+                                            <th>Concepto</th>
+                                            <th>Monto</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
                                 {getFilteredRecords()
                                     .sort((a, b) => new Date(b.fecha_pago || b.fecha_venta || b.fecha) - new Date(a.fecha_pago || a.fecha_venta || a.fecha))
                                     .map((record) => {
@@ -326,141 +430,51 @@ const FinanzasPage = () => {
                                         const concepto = isPago ? 'Pago de Cuota' : isVenta ? 'Venta' : record.concepto;
 
                                         return (
-                                            <TableRow key={`${type}-${record.id}`}>
-                                                <TableCell>{formatDate(date)}</TableCell>
-                                                <TableCell>{type.charAt(0).toUpperCase() + type.slice(1)}</TableCell>
-                                                <TableCell>{concepto}</TableCell>
-                                                <TableCell>${parseFloat(monto).toFixed(2)}</TableCell>
-                                                <TableCell>
-                                                    <IconButton 
+                                                    <tr key={`${type}-${record.id}`}>
+                                                        <td>{formatDate(date)}</td>
+                                                        <td>{type.charAt(0).toUpperCase() + type.slice(1)}</td>
+                                                        <td>{concepto}</td>
+                                                        <td>${parseFloat(monto).toFixed(2)}</td>
+                                                        <td>
+                                                            <Button 
+                                                                variant="danger" 
+                                                                size="sm"
                                                         onClick={() => openDeleteDialog(record, type)}
-                                                        color="error"
-                                                    >
-                                                        <DeleteIcon />
-                                                    </IconButton>
-                                                </TableCell>
-                                            </TableRow>
+                                                            >
+                                                                <FontAwesomeIcon icon={faTrash} />
+                                                            </Button>
+                                                        </td>
+                                                    </tr>
                                         );
                                     })}
-                            </TableBody>
+                                    </tbody>
                         </Table>
-                    </TableContainer>
-                </Box>
+                            </Card>
+                        </Col>
+                    </Row>
+                </Col>
+            </Row>
 
-                {/* Delete Confirmation Dialog */}
-                <Dialog
-                    open={deleteDialogOpen}
-                    onClose={() => setDeleteDialogOpen(false)}
-                >
-                    <DialogTitle>Confirmar Eliminación</DialogTitle>
-                    <DialogContent>
+            <Modal show={deleteDialogOpen} onHide={() => setDeleteDialogOpen(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirmar Eliminación</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
                         ¿Está seguro que desea eliminar este registro?
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setDeleteDialogOpen(false)}>Cancelar</Button>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setDeleteDialogOpen(false)}>
+                        Cancelar
+                    </Button>
                         <Button 
+                        variant="danger"
                             onClick={() => selectedRecord && handleDeleteRecord(selectedRecord.type, selectedRecord.id)}
-                            color="error"
-                            variant="contained"
                         >
                             Eliminar
                         </Button>
-                    </DialogActions>
-                </Dialog>
-
-                <Paper sx={{ p: 3, width: '100%', mt: 4 }}>
-                    <Box sx={{ p: 3 }}>
-                        <Typography variant="h5" gutterBottom>
-                            Calculadora de Reparto para The Badgers
-                        </Typography>
-                        
-                        <Box sx={{ mb: 4 }}>
-                            <TextField
-                                label="Ganancia Bruta Mensual"
-                                type="number"
-                                value={gananciaBruta}
-                                onChange={(e) => setGananciaBruta(e.target.value)}
-                                fullWidth
-                                sx={{ mb: 2 }}
-                                InputProps={{
-                                    startAdornment: <AttachMoneyIcon sx={{ mr: 1, color: 'text.secondary' }} />,
-                                }}
-                            />
-                            <Button 
-                                variant="contained" 
-                                onClick={calcularReparto}
-                                fullWidth
-                            >
-                                Calcular Reparto
-                            </Button>
-                        </Box>
-
-                        {resultados && (
-                            <Box>
-                                <Card sx={{ mb: 3 }}>
-                                    <CardContent>
-                                        <Typography variant="h6" gutterBottom>
-                                            Desglose del Cálculo
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            Pool destinado a salarios (60%): ${resultados.pool_de_salarios.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            Valor por hora de clase: ${resultados.valor_hora_variable.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            Ganancia remanente: ${resultados.ganancia_remanente.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            Ganancia por inversión: ${resultados.ganancia_por_inversion.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-
-                                <Grid container spacing={2}>
-                                    <Grid item xs={12} md={4}>
-                                        <Card>
-                                            <CardContent>
-                                                <Typography variant="h6" gutterBottom>
-                                                    Fede (10hs/sem)
-                                                </Typography>
-                                                <Typography variant="h4" color="primary">
-                                                    ${resultados.total_socio_1.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                </Typography>
-                                            </CardContent>
-                                        </Card>
-                                    </Grid>
-                                    <Grid item xs={12} md={4}>
-                                        <Card>
-                                            <CardContent>
-                                                <Typography variant="h6" gutterBottom>
-                                                    Guille (4hs/sem)
-                                                </Typography>
-                                                <Typography variant="h4" color="primary">
-                                                    ${resultados.total_socio_2.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                </Typography>
-                                            </CardContent>
-                                        </Card>
-                                    </Grid>
-                                    <Grid item xs={12} md={4}>
-                                        <Card>
-                                            <CardContent>
-                                                <Typography variant="h6" gutterBottom>
-                                                    Gonza (2hs/sem)
-                                                </Typography>
-                                                <Typography variant="h4" color="primary">
-                                                    ${resultados.total_socio_3.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                </Typography>
-                                            </CardContent>
-                                        </Card>
-                                    </Grid>
-                                </Grid>
-                            </Box>
-                        )}
-                    </Box>
-                </Paper>
+                </Modal.Footer>
+            </Modal>
             </Container>
-        </Box>
     );
 };
 

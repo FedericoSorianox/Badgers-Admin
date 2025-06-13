@@ -1,0 +1,7 @@
+.tabla-scroll-oculta {
+  scrollbar-width: none; /* Firefox */
+}
+.tabla-scroll-oculta::-webkit-scrollbar {
+  width: 0px;
+  background: transparent; /* Chrome/Safari/Edge */
+} 

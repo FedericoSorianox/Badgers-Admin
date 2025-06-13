@@ -2,15 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api';
 import { 
-    Button, TextField, Select, MenuItem, FormControl, InputLabel, Paper, 
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Box,
-    Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Tooltip, Container
-} from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
-import RemoveIcon from '@mui/icons-material/Remove';
-import InfoIcon from '@mui/icons-material/Info';
-import StarIcon from '@mui/icons-material/Star';
+    Card, Row, Col, Container, Button, Form, Table,
+    Modal, ListGroup, FormGroup, FormLabel, FormControl
+} from '@themesberg/react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+    faCheckCircle, faTimesCircle, faMinusCircle, 
+    faInfoCircle, faStar, faMoneyBill 
+} from '@fortawesome/free-solid-svg-icons';
 
 // Lista de socios que no pagan mensualidad
 const SOCIOS_SIN_PAGO = [
@@ -21,42 +20,42 @@ const SOCIOS_SIN_PAGO = [
 ];
 
 // Componente para el diálogo de confirmación de pago
-const ConfirmPagoDialog = ({ open, onClose, onConfirm, socio, mes, año }) => {
+const ConfirmPagoDialog = ({ show, onHide, onConfirm, socio, mes, año }) => {
     const [monto, setMonto] = useState(2000.0);
 
     const handleConfirm = () => {
         onConfirm(socio, mes, año, monto);
-        onClose();
+        onHide();
     };
 
     return (
-        <Dialog open={open} onClose={onClose}>
-            <DialogTitle>Confirmar Pago</DialogTitle>
-            <DialogContent>
-                <Typography variant="body1" gutterBottom>
-                    ¿Deseas registrar el pago para {socio?.nombre} del mes {mes} de {año}?
-                </Typography>
-                <TextField
-                    label="Monto"
-                    type="number"
-                    value={monto}
-                    onChange={(e) => setMonto(parseFloat(e.target.value))}
-                    fullWidth
-                    margin="normal"
-                />
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose}>Cancelar</Button>
-                <Button onClick={handleConfirm} variant="contained" color="primary">
+        <Modal show={show} onHide={onHide} centered>
+            <Modal.Header closeButton>
+                <Modal.Title>Confirmar Pago</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <p>¿Deseas registrar el pago para {socio?.nombre} del mes {mes} de {año}?</p>
+                <FormGroup>
+                    <FormLabel>Monto</FormLabel>
+                    <FormControl
+                        type="number"
+                        value={monto}
+                        onChange={(e) => setMonto(parseFloat(e.target.value))}
+                    />
+                </FormGroup>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={onHide}>Cancelar</Button>
+                <Button variant="primary" onClick={handleConfirm}>
                     Confirmar
                 </Button>
-            </DialogActions>
-        </Dialog>
+            </Modal.Footer>
+        </Modal>
     );
 };
 
 // Componente para el diálogo informativo
-const InfoDialog = ({ open, onClose, onConfirm, socio, mes, año, isSocioSinPago }) => {
+const InfoDialog = ({ show, onHide, onConfirm, socio, mes, año, isSocioSinPago }) => {
     const [monto, setMonto] = useState(2000.0);
     const fechaRegistro = new Date(socio?.fecha_registro);
     const fechaMesActual = new Date(año, mes - 1, 2);
@@ -64,71 +63,60 @@ const InfoDialog = ({ open, onClose, onConfirm, socio, mes, año, isSocioSinPago
 
     const handleConfirm = () => {
         onConfirm(socio, mes, año, monto);
-        onClose();
+        onHide();
     };
 
     if (isSocioSinPago) {
         return (
-            <Dialog open={open} onClose={onClose}>
-                <DialogTitle>Información del Socio</DialogTitle>
-                <DialogContent>
-                    <Typography variant="body1" gutterBottom>
-                        {socio?.nombre} es un socio sin pago mensual.
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" paragraph>
+            <Modal show={show} onHide={onHide} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Información del Socio</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p>{socio?.nombre} es un socio sin pago mensual.</p>
+                    <p className="text-muted">
                         Este socio tiene acceso completo al gimnasio sin necesidad de realizar pagos mensuales.
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={onClose}>Cerrar</Button>
-                </DialogActions>
-            </Dialog>
+                    </p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={onHide}>Cerrar</Button>
+                </Modal.Footer>
+            </Modal>
         );
     }
 
     return (
-        <Dialog open={open} onClose={onClose}>
-            <DialogTitle>Información del Mes</DialogTitle>
-            <DialogContent>
-                <Typography variant="body1" gutterBottom>
-                    Este mes no aplica para {socio?.nombre} porque:
-                </Typography>
-                <Typography variant="body2" color="text.secondary" paragraph>
-                    • Fecha de registro: {fechaRegistro.toLocaleDateString()}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" paragraph>
-                    • Mes seleccionado: {mes}/{año}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" paragraph>
-                    • Diferencia: {Math.abs(diasDiferencia)} días {diasDiferencia < 0 ? 'antes' : 'después'} del registro
-                </Typography>
+        <Modal show={show} onHide={onHide} centered>
+            <Modal.Header closeButton>
+                <Modal.Title>Información del Mes</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <p>Este mes no aplica para {socio?.nombre} porque:</p>
+                <ListGroup variant="flush">
+                    <ListGroup.Item>• Fecha de registro: {fechaRegistro.toLocaleDateString()}</ListGroup.Item>
+                    <ListGroup.Item>• Mes seleccionado: {mes}/{año}</ListGroup.Item>
+                    <ListGroup.Item>• Diferencia: {Math.abs(diasDiferencia)} días {diasDiferencia < 0 ? 'antes' : 'después'} del registro</ListGroup.Item>
+                </ListGroup>
                 
-                <Box sx={{ mt: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
-                    <Typography variant="subtitle2" gutterBottom>
-                        ¿Deseas registrar un pago de todos modos?
-                    </Typography>
-                    <TextField
-                        label="Monto"
-                        type="number"
-                        value={monto}
-                        onChange={(e) => setMonto(parseFloat(e.target.value))}
-                        fullWidth
-                        margin="normal"
-                        size="small"
-                    />
-                </Box>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose}>Cerrar</Button>
-                <Button 
-                    onClick={handleConfirm} 
-                    variant="contained" 
-                    color="primary"
-                >
+                <Card className="mt-3 p-3 bg-light">
+                    <p className="mb-2">¿Deseas registrar un pago de todos modos?</p>
+                    <FormGroup>
+                        <FormLabel>Monto</FormLabel>
+                        <FormControl
+                            type="number"
+                            value={monto}
+                            onChange={(e) => setMonto(parseFloat(e.target.value))}
+                        />
+                    </FormGroup>
+                </Card>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={onHide}>Cerrar</Button>
+                <Button variant="primary" onClick={handleConfirm}>
                     Registrar Pago
                 </Button>
-            </DialogActions>
-        </Dialog>
+            </Modal.Footer>
+        </Modal>
     );
 };
 
@@ -137,8 +125,8 @@ const PagosPage = () => {
     const [pagos, setPagos] = useState([]);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [newPago, setNewPago] = useState({ socio: '', mes: new Date().getMonth() + 1, año: selectedYear, monto: 2000.0 });
-    const [confirmDialog, setConfirmDialog] = useState({ open: false, socio: null, mes: null });
-    const [infoDialog, setInfoDialog] = useState({ open: false, socio: null, mes: null });
+    const [confirmDialog, setConfirmDialog] = useState({ show: false, socio: null, mes: null });
+    const [infoDialog, setInfoDialog] = useState({ show: false, socio: null, mes: null });
 
     const fetchSociosAndPagos = async () => {
         try {
@@ -196,225 +184,240 @@ const PagosPage = () => {
         // Si el socio está en la lista de socios sin pago
         if (SOCIOS_SIN_PAGO.includes(socio.nombre)) {
             return (
-                <Tooltip title="Socio sin pago mensual">
-                    <IconButton 
-                        size="small" 
-                        color="primary"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setInfoDialog({
-                                open: true,
-                                socio: socio,
-                                mes: mes,
-                                isSocioSinPago: true
-                            });
-                        }}
-                    >
-                        <StarIcon />
-                    </IconButton>
-                </Tooltip>
-            );
-        }
-
-        const pagoExistente = pagos.find(p => p.socio === socio.ci && p.mes === mes);
-        
-        if (pagoExistente) {
-            return (
-                <IconButton 
-                    size="small" 
-                    color="success"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        if (window.confirm('¿Deseas eliminar este pago?')) {
-                            handleRegistrarPago(socio, mes, selectedYear, 0);
-                        }
-                    }}
+                <Button 
+                    variant="link" 
+                    className="p-0 text-warning"
+                    onClick={() => setInfoDialog({ show: true, socio, mes, isSocioSinPago: true })}
                 >
-                    <CheckCircleIcon />
-                </IconButton>
+                    <FontAwesomeIcon icon={faStar} />
+                </Button>
             );
         }
 
-        if (socio.fecha_registro) {
-            const fechaRegistro = new Date(socio.fecha_registro);
-            const fechaMesActual = new Date(selectedYear, mes - 1, 2);
-
-            if (fechaMesActual < fechaRegistro) {
-                return (
-                    <Tooltip title="Click para más información">
-                        <IconButton 
-                            size="small" 
-                            color="disabled"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setInfoDialog({
-                                    open: true,
-                                    socio: socio,
-                                    mes: mes,
-                                    isSocioSinPago: false
-                                });
-                            }}
-                        >
-                            <RemoveIcon />
-                        </IconButton>
-                    </Tooltip>
-                );
+        // Corregir interpretación de fecha de registro (mm/dd/yyyy)
+        // Si la fecha viene como '6/8/2025', debe ser 6 (mes), 8 (día), 2025 (año)
+        let fechaRegistro;
+        if (typeof socio.fecha_registro === 'string' && socio.fecha_registro.includes('/')) {
+            const parts = socio.fecha_registro.split('/');
+            if (parts.length === 3) {
+                // mm/dd/yyyy
+                fechaRegistro = new Date(parts[2], parseInt(parts[0], 10) - 1, parseInt(parts[1], 10));
+            } else {
+                fechaRegistro = new Date(socio.fecha_registro);
             }
+        } else {
+            fechaRegistro = new Date(socio.fecha_registro);
         }
-        
+        const fechaMesActual = new Date(selectedYear, mes - 1, 2);
+
+        // Buscar el pago correspondiente (comparación robusta)
+        const pago = pagos.find(p => 
+            (p.socio === socio.ci || p.socio?.ci === socio.ci) &&
+            Number(p.mes) === Number(mes) &&
+            Number(p.año) === Number(selectedYear)
+        );
+
+        // Si el mes no aplica pero existe un pago, mostrar el check verde
+        if (fechaRegistro > fechaMesActual && pago) {
+            return (
+                <Button 
+                    variant="link" 
+                    className="p-0 text-success"
+                    onClick={() => setInfoDialog({ show: true, socio, mes })}
+                >
+                    <FontAwesomeIcon icon={faCheckCircle} />
+                </Button>
+            );
+        }
+
+        // Si el mes no aplica y no hay pago, mostrar info
+        if (fechaRegistro > fechaMesActual) {
+            return (
+                <Button 
+                    variant="link" 
+                    className="p-0 text-muted"
+                    onClick={() => setInfoDialog({ show: true, socio, mes })}
+                >
+                    <FontAwesomeIcon icon={faInfoCircle} />
+                </Button>
+            );
+        }
+
+        if (pago) {
+            return (
+                <Button 
+                    variant="link" 
+                    className="p-0 text-success"
+                    onClick={() => setInfoDialog({ show: true, socio, mes })}
+                >
+                    <FontAwesomeIcon icon={faCheckCircle} />
+                </Button>
+            );
+        }
+
         return (
-            <IconButton 
-                size="small" 
-                color="error"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    setConfirmDialog({
-                        open: true,
-                        socio: socio,
-                        mes: mes
-                    });
-                }}
+            <Button 
+                variant="link" 
+                className="p-0 text-danger"
+                onClick={() => setConfirmDialog({ show: true, socio, mes })}
             >
-                <CancelIcon />
-            </IconButton>
+                <FontAwesomeIcon icon={faTimesCircle} />
+            </Button>
         );
     };
 
     return (
-        <Box sx={{
-            minHeight: '100vh',
-            width: '100%',
-            background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-            py: { xs: 3, md: 6 },
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-        }}>
-            <Container maxWidth={false} sx={{
-                px: { xs: 2, sm: 3, md: 4 },
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-            }}>
-                <Typography
-                    variant="h2"
-                    gutterBottom
-                    align="center"
-                    sx={{
-                        fontWeight: 900,
-                        mb: 8,
-                        background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-                        backgroundClip: 'text',
-                        textFillColor: 'transparent',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        fontSize: { xs: '2.5rem', md: '3.5rem' },
-                    }}
-                >
-                    Gestión de Pagos
-                </Typography>
-                <Paper sx={{ p: 2, mb: 3 }}>
-                    <Typography variant="h6">Registrar Nuevo Pago</Typography>
-                    
-                    <Box component="form" onSubmit={handleRegistrarPago} sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 2 }}>
-                        <FormControl sx={{ minWidth: 220, flex: 3 }}> 
-                            <InputLabel>Socio</InputLabel>
-                            <Select name="socio" value={newPago.socio} label="Socio" onChange={handleNewPagoChange}>
-                                {socios && socios.map(s => <MenuItem key={s.ci} value={s.ci}>{s.nombre}</MenuItem>)}
-                            </Select>
-                        </FormControl>
+        <Container fluid className="px-0">
+            <Row className="justify-content-center">
+                <Col xl={10} lg={12}>
+                    <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
+                        <h1 className="h2 mb-0 text-center w-100">Gestión de Pagos</h1>
+                    </div>
 
-                        <FormControl sx={{ minWidth: 100, flex: 1 }}>
-                            <InputLabel>Mes</InputLabel>
-                            <Select name="mes" value={newPago.mes} label="Mes" onChange={handleNewPagoChange}>
-                                {mesesNombres.map((nombre, i) => <MenuItem key={i} value={i + 1}>{nombre}</MenuItem>)}
-                            </Select>
-                        </FormControl>
+                    <Card className="shadow border-0 w-100 bg-white p-3 mb-4">
+                        <Card.Title as="h4" className="mb-4 text-center text-primary">Registrar Nuevo Pago</Card.Title>
+                        <Form>
+                            <Row>
+                                <Col md={4}>
+                                    <FormGroup className="mb-3">
+                                        <FormLabel>Socio</FormLabel>
+                                        <Form.Select
+                                            name="socio"
+                                            value={newPago.socio}
+                                            onChange={handleNewPagoChange}
+                                        >
+                                            <option value="">Seleccionar socio...</option>
+                                            {socios.map(socio => (
+                                                <option key={socio.ci} value={socio.ci}>
+                                                    {socio.nombre}
+                                                </option>
+                                            ))}
+                                        </Form.Select>
+                                    </FormGroup>
+                                </Col>
+                                <Col md={2}>
+                                    <FormGroup className="mb-3">
+                                        <FormLabel>Mes</FormLabel>
+                                        <Form.Select
+                                            name="mes"
+                                            value={newPago.mes}
+                                            onChange={handleNewPagoChange}
+                                        >
+                                            {mesesNombres.map((mes, index) => (
+                                                <option key={index + 1} value={index + 1}>
+                                                    {mes}
+                                                </option>
+                                            ))}
+                                        </Form.Select>
+                                    </FormGroup>
+                                </Col>
+                                <Col md={2}>
+                                    <FormGroup className="mb-3">
+                                        <FormLabel>Año</FormLabel>
+                                        <Form.Select
+                                            name="año"
+                                            value={newPago.año}
+                                            onChange={handleNewPagoChange}
+                                        >
+                                            {years.map(year => (
+                                                <option key={year} value={year}>
+                                                    {year}
+                                                </option>
+                                            ))}
+                                        </Form.Select>
+                                    </FormGroup>
+                                </Col>
+                                <Col md={2}>
+                                    <FormGroup className="mb-3">
+                                        <FormLabel>Monto</FormLabel>
+                                        <FormControl
+                                            type="number"
+                                            name="monto"
+                                            value={newPago.monto}
+                                            onChange={handleNewPagoChange}
+                                        />
+                                    </FormGroup>
+                                </Col>
+                                <Col md={2} className="d-flex align-items-end">
+                                    <Button 
+                                        variant="primary" 
+                                        className="w-100"
+                                        onClick={() => {
+                                            const socio = socios.find(s => s.ci === newPago.socio);
+                                            if (socio) {
+                                                handleRegistrarPago(socio, newPago.mes, newPago.año, newPago.monto);
+                                            }
+                                        }}
+                                    >
+                                        Registrar
+                                    </Button>
+                                </Col>
+                            </Row>
+                        </Form>
+                    </Card>
 
-                        <TextField 
-                            name="año" 
-                            label="Año" 
-                            type="number" 
-                            value={newPago.año} 
-                            onChange={handleNewPagoChange} 
-                            sx={{ minWidth: 80, flex: 1 }}
-                        />
-
-                        <TextField 
-                            name="monto" 
-                            label="Monto" 
-                            type="number" 
-                            value={newPago.monto} 
-                            onChange={handleNewPagoChange}
-                            sx={{ minWidth: 100, flex: 1 }} 
-                        />
-
-                        <Button type="submit" variant="contained">Guardar</Button>
-                    </Box>
-                </Paper>
-
-                <Typography variant="h5" gutterBottom>Estado de Pagos Anual</Typography>
-                <FormControl sx={{ minWidth: 140, mb: 2 }}>
-                    <InputLabel>Año</InputLabel>
-                    <Select value={selectedYear} label="Año" onChange={(e) => setSelectedYear(e.target.value)}>
-                        {years.map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
-                    </Select>
-                </FormControl>
-
-                <TableContainer component={Paper}>
-                    <Table stickyHeader>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Socio</TableCell>
-                                {mesesNombres.map(mes => <TableCell key={mes} align="center">{mes}</TableCell>)}
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {socios && socios.length > 0 ? (
-                                socios.map(socio => (
-                                    <TableRow key={socio.ci}>
-                                        <TableCell>{socio.nombre}</TableCell>
-                                        {mesesNombres.map((_, i) => (
-                                            <TableCell key={i} align="center">
-                                                {getStatus(socio, i + 1)}
-                                            </TableCell>
+                    <Card className="shadow border-0 w-100 bg-white p-3">
+                        <Card.Title as="h4" className="mb-4 text-center text-primary">Estado de Pagos {selectedYear}</Card.Title>
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                            <Form.Select 
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                                style={{ width: '200px' }}
+                            >
+                                {years.map(year => (
+                                    <option key={year} value={year}>
+                                        {year}
+                                    </option>
+                                ))}
+                            </Form.Select>
+                        </div>
+                        <div style={{ maxHeight: '70vh', overflowY: 'auto', scrollbarGutter: 'stable' }} className="tabla-scroll-oculta">
+                            <Table responsive hover className="user-table align-items-center">
+                                <thead className="bg-light">
+                                    <tr>
+                                        <th>Socio</th>
+                                        {mesesNombres.map((mes, index) => (
+                                            <th key={index} className="text-center">{mes}</th>
                                         ))}
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={13} align="center">
-                                        Cargando socios...
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {socios.map(socio => (
+                                        <tr key={socio.ci}>
+                                            <td>{socio.nombre}</td>
+                                            {mesesNombres.map((_, index) => (
+                                                <td key={index} className="text-center">
+                                                    {getStatus(socio, index + 1)}
+                                                </td>
+                                            ))}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
+                        </div>
+                    </Card>
 
-                <ConfirmPagoDialog
-                    open={confirmDialog.open}
-                    onClose={() => setConfirmDialog({ open: false, socio: null, mes: null })}
-                    onConfirm={handleRegistrarPago}
-                    socio={confirmDialog.socio}
-                    mes={confirmDialog.mes}
-                    año={selectedYear}
-                />
+                    <ConfirmPagoDialog
+                        show={confirmDialog.show}
+                        onHide={() => setConfirmDialog({ show: false, socio: null, mes: null })}
+                        onConfirm={handleRegistrarPago}
+                        socio={confirmDialog.socio}
+                        mes={confirmDialog.mes}
+                        año={selectedYear}
+                    />
 
-                <InfoDialog
-                    open={infoDialog.open}
-                    onClose={() => setInfoDialog({ open: false, socio: null, mes: null })}
-                    onConfirm={handleRegistrarPago}
-                    socio={infoDialog.socio}
-                    mes={infoDialog.mes}
-                    año={selectedYear}
-                    isSocioSinPago={infoDialog.isSocioSinPago}
-                />
-            </Container>
-        </Box>
+                    <InfoDialog
+                        show={infoDialog.show}
+                        onHide={() => setInfoDialog({ show: false, socio: null, mes: null })}
+                        onConfirm={handleRegistrarPago}
+                        socio={infoDialog.socio}
+                        mes={infoDialog.mes}
+                        año={selectedYear}
+                        isSocioSinPago={infoDialog.isSocioSinPago}
+                    />
+                </Col>
+            </Row>
+        </Container>
     );
 };
 
