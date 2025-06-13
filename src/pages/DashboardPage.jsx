@@ -17,7 +17,7 @@ const SOCIOS_SIN_PAGO = [
 const COLORS = ['#4CAF50', '#FFC107'];
 
 const DashboardPage = () => {
-    const [stats, setStats] = useState({ 
+         const [stats, setStats] = useState({ 
         socios_activos: 0, 
         productos_en_inventario: 0,
         pagos_mes: { pagados: 0, pendientes: 0 }
@@ -71,7 +71,7 @@ const DashboardPage = () => {
         };
         fetchData();
     }, []);
-
+//console.log("Datos de socios pendientes:", sociosPendientes); // <--- AÑADE ESTA LÍNEA
     return (
         <Container fluid className="px-0">
             <Row className="justify-content-center">
@@ -169,15 +169,17 @@ const DashboardPage = () => {
                         </Col>
                     </Row>
                     <Modal show={showModal} onHide={() => setShowModal(false)} centered size="md">
+                     
                         <Modal.Header closeButton>
                             <Modal.Title>Socios Pendientes de Pago</Modal.Title>
                         </Modal.Header>
                         <Modal.Body>
                             <ListGroup variant="flush">
                                 {sociosPendientes.map((socio) => (
+                                  //  console.log("Renderizando socio:", socio), // <--- Y AÑADE ESTA OTRA LÍNEA
                                     <ListGroup.Item key={socio.ci} className="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <div className="fw-bold">{socio.nombre}</div>
+                                            <div className="fw-bold">{socio.nombre}</div>                                            
                                             <div className="text-muted small">CI: {socio.ci}</div>
                                         </div>
                                         {socio.celular && (

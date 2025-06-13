@@ -1,7 +1,7 @@
 // src/App.jsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, CssBaseline, Container, Box } from '@mui/material';
+import { ThemeProvider, CssBaseline, Box } from '@mui/material';
 import theme from './theme';
 import Navbar from './components/Navbar';
 import DashboardPage from './pages/DashboardPage';
@@ -16,19 +16,23 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <Box sx={{ 
-          minHeight: '100vh',
-          backgroundColor: 'background.default',
+        {/* Contenedor principal de la aplicación */}
+        <Box sx={{
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column', // <--- ¡ESTE ES EL CAMBIO CLAVE!
+          minHeight: '100vh',
+          backgroundColor: 'background.default'
         }}>
-          <Navbar />
+          {/* La barra de navegación superior */}
+          <Navbar /> 
+          
+          {/* Contenedor para el contenido principal de cada página */}
           <Box 
+            component="main" 
             sx={{ 
-              py: 4,
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column'
+              flexGrow: 1, // Hace que esta caja ocupe el espacio vertical restante
+              p: 3,        // Padding para que el contenido no se pegue a los bordes
+              width: '100%'
             }}
           >
             <Routes>
