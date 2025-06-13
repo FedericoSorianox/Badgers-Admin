@@ -1,4 +1,3 @@
-
 import React from "react";
 import moment from "moment-timezone";
 import { Row, Col, Card, OverlayTrigger, Tooltip, Image, Button } from '@themesberg/react-bootstrap';

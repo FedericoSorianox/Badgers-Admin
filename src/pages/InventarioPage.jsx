@@ -1,33 +1,19 @@
-// src/pages/InventarioPage.jsx
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import apiClient from '../api';
 import {
-    Container, Paper, Typography, Box, Tabs, Tab, TextField, Button,
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, Select, MenuItem,
-    IconButton, Avatar, Card, CardContent, Grid, Drawer, Divider
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import TrendingDownIcon from '@mui/icons-material/TrendingDown';
-import CloseIcon from '@mui/icons-material/Close';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-
-// --- Componente de Panel para cada Tab (sin cambios) ---
-function TabPanel(props) {
-    const { children, value, index, ...other } = props;
-    return (
-        <div role="tabpanel" hidden={value !== index} {...other}>
-            {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
-        </div>
-    );
-}
+    Card, Row, Col, Container, Button, Form, Table,
+    Modal, ListGroup, FormGroup, FormLabel, FormControl,
+    Nav, NavItem, NavLink, TabContent, TabPane
+} from '@themesberg/react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+    faPlus, faEdit, faTrash, faArrowUp, 
+    faArrowDown, faTimes, faMoneyBill,
+    faImage
+} from '@fortawesome/free-solid-svg-icons';
 
 // --- Componente de Formulario para Productos (con fotos y modo vista) ---
-const ProductForm = ({ open, onClose, onSave, product, isViewOnly = false }) => {
+const ProductForm = ({ show, onHide, onSave, product, isViewOnly = false }) => {
     const [formData, setFormData] = useState({ nombre: '', precio_costo: '', precio_venta: '', stock: '' });
     const [fotoFile, setFotoFile] = useState(null);
 
@@ -45,36 +31,98 @@ const ProductForm = ({ open, onClose, onSave, product, isViewOnly = false }) => 
     };
 
     return (
-        <Dialog open={open} onClose={onClose}>
-            <DialogTitle>{isViewOnly ? 'Detalles del Producto' : (product ? 'Editar Producto' : 'Agregar Producto')}</DialogTitle>
-            <DialogContent>
+        <Modal show={show} onHide={onHide} centered size="lg">
+            <Modal.Header closeButton>
+                <Modal.Title>
+                    {isViewOnly ? 'Detalles del Producto' : (product ? 'Editar Producto' : 'Agregar Producto')}
+                </Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
                 {product && product.foto && (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
-                        <Avatar src={product.foto} sx={{ width: 100, height: 100 }} variant="rounded" alt={formData.nombre} />
-                    </Box>
+                    <div className="text-center mb-3">
+                        <img 
+                            src={product.foto} 
+                            alt={formData.nombre}
+                            className="img-fluid rounded"
+                            style={{ maxHeight: '200px' }}
+                        />
+                    </div>
                 )}
-                <TextField autoFocus margin="dense" name="nombre" label="Nombre" fullWidth value={formData.nombre} onChange={handleChange} disabled={isViewOnly} />
-                <TextField margin="dense" name="precio_costo" label="Precio de Costo" type="number" fullWidth value={formData.precio_costo} onChange={handleChange} disabled={isViewOnly} />
-                <TextField margin="dense" name="precio_venta" label="Precio de Venta" type="number" fullWidth value={formData.precio_venta} onChange={handleChange} disabled={isViewOnly} />
-                <TextField margin="dense" name="stock" label="Stock" type="number" fullWidth value={formData.stock} onChange={handleChange} disabled={isViewOnly} />
+                <Form onSubmit={handleSubmit}>
+                    <FormGroup className="mb-3">
+                        <FormLabel>Nombre</FormLabel>
+                        <FormControl
+                            name="nombre"
+                            value={formData.nombre}
+                            onChange={handleChange}
+                            disabled={isViewOnly}
+                            required
+                        />
+                    </FormGroup>
+                    <FormGroup className="mb-3">
+                        <FormLabel>Precio de Costo</FormLabel>
+                        <FormControl
+                            name="precio_costo"
+                            type="number"
+                            value={formData.precio_costo}
+                            onChange={handleChange}
+                            disabled={isViewOnly}
+                            required
+                        />
+                    </FormGroup>
+                    <FormGroup className="mb-3">
+                        <FormLabel>Precio de Venta</FormLabel>
+                        <FormControl
+                            name="precio_venta"
+                            type="number"
+                            value={formData.precio_venta}
+                            onChange={handleChange}
+                            disabled={isViewOnly}
+                            required
+                        />
+                    </FormGroup>
+                    <FormGroup className="mb-3">
+                        <FormLabel>Stock</FormLabel>
+                        <FormControl
+                            name="stock"
+                            type="number"
+                            value={formData.stock}
+                            onChange={handleChange}
+                            disabled={isViewOnly}
+                            required
+                        />
+                    </FormGroup>
+                    {!isViewOnly && (
+                        <FormGroup className="mb-3">
+                            <FormLabel>Foto del Producto</FormLabel>
+                            <FormControl
+                                type="file"
+                                onChange={handleFileChange}
+                                accept="image/*"
+                            />
+                        </FormGroup>
+                    )}
+                    {fotoFile && (
+                        <p className="text-muted small">{fotoFile.name}</p>
+                    )}
+                </Form>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={onHide}>
+                    {isViewOnly ? 'Cerrar' : 'Cancelar'}
+                </Button>
                 {!isViewOnly && (
-                    <Button variant="contained" component="label" sx={{ mt: 2 }}>
-                        Subir Foto
-                        <input type="file" hidden onChange={handleFileChange} />
+                    <Button variant="primary" onClick={handleSubmit}>
+                        Guardar
                     </Button>
                 )}
-                {fotoFile && <Typography variant="body2" sx={{mt:1}}>{fotoFile.name}</Typography>}
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose}>{isViewOnly ? 'Cerrar' : 'Cancelar'}</Button>
-                {!isViewOnly && <Button onClick={handleSubmit} variant="contained">Guardar</Button>}
-            </DialogActions>
-        </Dialog>
+            </Modal.Footer>
+        </Modal>
     );
 };
 
 // --- Componente para el Panel de Detalles del Producto ---
-const ProductDetailPanel = ({ product, open, onClose, onEdit, onDelete }) => {
+const ProductDetailPanel = ({ product, show, onHide, onEdit, onDelete }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({});
     const [fotoFile, setFotoFile] = useState(null);
@@ -118,552 +166,571 @@ const ProductDetailPanel = ({ product, open, onClose, onEdit, onDelete }) => {
     if (!product) return null;
 
     return (
-        <Drawer
-            anchor="right"
-            open={open}
-            onClose={onClose}
-            PaperProps={{
-                sx: { width: { xs: '100%', sm: 400 } }
-            }}
-        >
-            <Box sx={{ p: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="h6">
+        <Modal show={show} onHide={onHide} centered size="lg">
+            <Modal.Header closeButton>
+                <Modal.Title>
                         {isEditing ? 'Editar Producto' : 'Detalles del Producto'}
-                    </Typography>
-                    <IconButton onClick={onClose}>
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
-                <Divider sx={{ mb: 2 }} />
-
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {/* Foto del producto */}
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                        <Avatar 
+                </Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <div className="text-center mb-4">
+                    <img 
                             src={product.foto} 
-                            sx={{ width: 150, height: 150 }} 
-                            variant="rounded"
-                        />
-                    </Box>
+                        alt={product.nombre}
+                        className="img-fluid rounded"
+                        style={{ maxHeight: '200px' }}
+                    />
+                </div>
 
-                    {/* Campos del formulario */}
-                    <TextField
-                        label="Nombre"
+                <Form>
+                    <FormGroup className="mb-3">
+                        <FormLabel>Nombre</FormLabel>
+                        <FormControl
                         name="nombre"
                         value={formData.nombre || ''}
                         onChange={handleChange}
                         disabled={!isEditing}
-                        fullWidth
-                    />
-                    <TextField
-                        label="Precio de Costo"
+                        />
+                    </FormGroup>
+                    <FormGroup className="mb-3">
+                        <FormLabel>Precio de Costo</FormLabel>
+                        <FormControl
                         name="precio_costo"
                         type="number"
                         value={formData.precio_costo || ''}
                         onChange={handleChange}
                         disabled={!isEditing}
-                        fullWidth
-                    />
-                    <TextField
-                        label="Precio de Venta"
+                        />
+                    </FormGroup>
+                    <FormGroup className="mb-3">
+                        <FormLabel>Precio de Venta</FormLabel>
+                        <FormControl
                         name="precio_venta"
                         type="number"
                         value={formData.precio_venta || ''}
                         onChange={handleChange}
                         disabled={!isEditing}
-                        fullWidth
-                    />
-                    <TextField
-                        label="Stock"
+                        />
+                    </FormGroup>
+                    <FormGroup className="mb-3">
+                        <FormLabel>Stock</FormLabel>
+                        <FormControl
                         name="stock"
                         type="number"
                         value={formData.stock || ''}
                         onChange={handleChange}
                         disabled={!isEditing}
-                        fullWidth
-                    />
+                        />
+                    </FormGroup>
 
-                    {/* Información adicional */}
-                    <Box sx={{ mt: 2 }}>
-                        <Typography variant="subtitle2" color="text.secondary">
-                            Ganancia por unidad:
-                        </Typography>
-                        <Typography variant="h6" color="success.main">
+                    {isEditing && (
+                        <FormGroup className="mb-3">
+                            <FormLabel>Cambiar Foto</FormLabel>
+                            <FormControl
+                                type="file"
+                                onChange={handleFileChange}
+                                accept="image/*"
+                            />
+                        </FormGroup>
+                    )}
+
+                    <Card className="mt-3 p-3 bg-light">
+                        <p className="mb-1 text-muted">Ganancia por unidad:</p>
+                        <h4 className="text-success mb-0">
                             ${(formData.precio_venta - formData.precio_costo).toFixed(2)}
-                        </Typography>
-                    </Box>
-
-                    {/* Botones de acción */}
-                    <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                        </h4>
+                    </Card>
+                </Form>
+            </Modal.Body>
+            <Modal.Footer>
                         {isEditing ? (
                             <>
-                                <Button 
-                                    variant="contained" 
-                                    onClick={handleSave}
-                                    fullWidth
-                                >
-                                    Guardar
-                                </Button>
-                                <Button 
-                                    variant="outlined" 
-                                    onClick={() => {
-                                        setIsEditing(false);
-                                        setFormData(product);
-                                    }}
-                                    fullWidth
-                                >
+                        <Button variant="secondary" onClick={() => setIsEditing(false)}>
                                     Cancelar
                                 </Button>
+                        <Button variant="primary" onClick={handleSave}>
+                            Guardar Cambios
+                        </Button>
                             </>
                         ) : (
                             <>
-                                <Button 
-                                    variant="contained" 
-                                    onClick={() => setIsEditing(true)}
-                                    fullWidth
-                                >
+                        <Button variant="secondary" onClick={onHide}>
+                            Cerrar
+                        </Button>
+                        <Button variant="primary" onClick={() => setIsEditing(true)}>
                                     Editar
                                 </Button>
-                                <Button 
-                                    variant="outlined" 
-                                    color="error"
-                                    onClick={() => {
-                                        if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
-                                            onDelete(product.id);
-                                        }
-                                    }}
-                                    fullWidth
-                                >
+                        <Button variant="danger" onClick={() => onDelete(product.id)}>
                                     Eliminar
                                 </Button>
                             </>
                         )}
-                    </Box>
-                </Box>
-            </Box>
-        </Drawer>
+            </Modal.Footer>
+        </Modal>
     );
 };
 
-// --- Componente para la Lista de Productos (Actualizado) ---
+// --- Componente de Lista de Productos ---
 const ProductListComponent = ({ onProductUpdate, onEdit }) => {
-    const [productos, setProductos] = useState([]);
+    const [products, setProducts] = useState([]);
     const [selectedProduct, setSelectedProduct] = useState(null);
+    const [showForm, setShowForm] = useState(false);
+    const [showDetail, setShowDetail] = useState(false);
+    const [showViewModal, setShowViewModal] = useState(false);
+    const [selectedProductView, setSelectedProductView] = useState(null);
     
-    const fetchProductos = useCallback(async () => {
+    const fetchProducts = async () => {
         try {
             const response = await apiClient.get('/productos/');
-            setProductos(response.data.results ? response.data.results : response.data);
+            setProducts(response.data.results || response.data);
         } catch (error) {
-            console.error("Error al cargar productos:", error);
+            console.error("Error fetching products:", error);
         }
-    }, []);
+    };
 
     useEffect(() => {
-        fetchProductos();
-    }, [fetchProductos]);
+        fetchProducts();
+    }, []);
 
     const handleDelete = async (id) => {
+        if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+            try {
+                await apiClient.delete(`/productos/${id}/`);
+                fetchProducts();
+            } catch (error) {
+                console.error("Error deleting product:", error);
+                alert("Error al eliminar el producto");
+            }
+        }
+    };
+
+    const handleSave = async (data, file, id) => {
         try {
-            await apiClient.delete(`/productos/${id}/`);
-            fetchProductos();
-            onProductUpdate();
-            setSelectedProduct(null);
+            const formData = new FormData();
+            Object.keys(data).forEach(key => {
+                formData.append(key, data[key]);
+            });
+            if (file) {
+                formData.append('foto', file);
+            }
+
+            if (id) {
+                await apiClient.patch(`/productos/${id}/`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+            } else {
+                await apiClient.post('/productos/', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+            }
+
+            setShowForm(false);
+            fetchProducts();
         } catch (error) {
-            console.error("Error al eliminar producto:", error);
+            console.error("Error saving product:", error);
+            alert("Error al guardar el producto");
         }
     };
 
     return (
-        <>
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Foto</TableCell>
-                            <TableCell>Nombre</TableCell>
-                            <TableCell align="right">Precio de Costo</TableCell>
-                            <TableCell align="right">Precio de Venta</TableCell>
-                            <TableCell align="right">Ganancia</TableCell>
-                            <TableCell align="right">Stock</TableCell>
-                            <TableCell align="center">Acciones</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {productos.map((p) => (
-                            <TableRow 
-                                key={p.id} 
-                                hover 
-                                onClick={() => setSelectedProduct(p)}
-                                sx={{ cursor: 'pointer' }}
-                            >
-                                <TableCell><Avatar src={p.foto} variant="rounded" /></TableCell>
-                                <TableCell>{p.nombre}</TableCell>
-                                <TableCell align="right">${parseFloat(p.precio_costo).toFixed(2)}</TableCell>
-                                <TableCell align="right">${parseFloat(p.precio_venta).toFixed(2)}</TableCell>
-                                <TableCell align="right">${p.ganancia?.toFixed(2) || '0.00'}</TableCell>
-                                <TableCell align="right">{p.stock}</TableCell>
-                                <TableCell align="center">
-                                    <IconButton onClick={(e) => {
+        <div>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <h4>Lista de Productos</h4>
+                <Button 
+                    variant="primary"
+                    onClick={() => {
+                        setSelectedProduct(null);
+                        setShowForm(true);
+                    }}
+                >
+                    <FontAwesomeIcon icon={faPlus} className="me-2" />
+                    Agregar Producto
+                </Button>
+            </div>
+
+            <Table responsive hover className="user-table align-items-center">
+                <thead className="bg-light">
+                    <tr>
+                        <th>Foto</th>
+                        <th>Nombre</th>
+                        <th>Precio Costo</th>
+                        <th>Precio Venta</th>
+                        <th>Stock</th>
+                        <th>Ganancia</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {products.map(product => (
+                        <tr key={product.id} onClick={() => { setSelectedProductView(product); setShowViewModal(true); }} style={{ cursor: 'pointer' }}>
+                            <td>
+                                {product.foto ? (
+                                    <img 
+                                        src={product.foto} 
+                                        alt={product.nombre}
+                                        className="rounded"
+                                        style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                                    />
+                                ) : (
+                                    <div className="rounded bg-light d-flex align-items-center justify-content-center" style={{ width: '50px', height: '50px' }}>
+                                        <FontAwesomeIcon icon={faImage} className="text-muted" />
+                                    </div>
+                                )}
+                            </td>
+                            <td>{product.nombre}</td>
+                            <td>${product.precio_costo}</td>
+                            <td>${product.precio_venta}</td>
+                            <td>{product.stock}</td>
+                            <td className={product.precio_venta - product.precio_costo >= 0 ? 'text-success' : 'text-danger'}>
+                                ${(product.precio_venta - product.precio_costo).toFixed(2)}
+                            </td>
+                            <td>
+                                <Button 
+                                    variant="link" 
+                                    className="p-0 me-2"
+                                    onClick={(e) => {
                                         e.stopPropagation();
-                                        setSelectedProduct(p);
-                                    }}>
-                                        <EditIcon />
-                                    </IconButton>
-                                    <IconButton onClick={(e) => {
+                                        setSelectedProduct(product);
+                                        setShowDetail(true);
+                                    }}
+                                >
+                                    <FontAwesomeIcon icon={faEdit} />
+                                </Button>
+                                <Button 
+                                    variant="link" 
+                                    className="p-0 text-danger"
+                                    onClick={(e) => {
                                         e.stopPropagation();
-                                        handleDelete(p.id);
-                                    }}>
-                                        <DeleteIcon color="error" />
-                                    </IconButton>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
+                                        handleDelete(product.id);
+                                    }}
+                                >
+                                    <FontAwesomeIcon icon={faTrash} />
+                                </Button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
                 </Table>
-            </TableContainer>
+
+            <ProductForm
+                show={showForm}
+                onHide={() => setShowForm(false)}
+                onSave={handleSave}
+                product={selectedProduct}
+            />
 
             <ProductDetailPanel
-                product={selectedProduct}
-                open={!!selectedProduct}
-                onClose={() => setSelectedProduct(null)}
-                onEdit={(updatedProduct) => {
-                    fetchProductos();
-                    onProductUpdate();
-                }}
+                show={showDetail}
+                onHide={() => setShowDetail(false)}
+                onEdit={onEdit}
                 onDelete={handleDelete}
+                product={selectedProduct}
             />
-        </>
+
+            <ProductForm
+                show={showViewModal}
+                onHide={() => setShowViewModal(false)}
+                onSave={() => {}}
+                product={selectedProductView}
+                isViewOnly={true}
+            />
+        </div>
     );
 };
 
-// --- Componente para Registrar Venta ---
+// --- Componente de Formulario de Venta ---
 const VentaFormComponent = ({ productos, onVentaSuccess }) => {
-    const [venta, setVenta] = useState({ producto: '', cantidad: 1 });
+    const [venta, setVenta] = useState({
+        producto: '',
+        cantidad: 1,
+        fecha_venta: new Date().toISOString().split('T')[0]
+    });
 
     const handleChange = (e) => setVenta({ ...venta, [e.target.name]: e.target.value });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!venta.producto || venta.cantidad <= 0) {
-            alert("Por favor, selecciona un producto y una cantidad válida.");
-            return;
-        }
         try {
-            await apiClient.post('/ventas/', {
-                producto: venta.producto,
-                cantidad: parseInt(venta.cantidad)
+            const producto = productos.find(p => p.id === parseInt(venta.producto));
+            if (!producto) {
+                alert('Producto no encontrado');
+                return;
+            }
+
+            if (producto.stock < parseInt(venta.cantidad)) {
+                alert('No hay suficiente stock disponible');
+                return;
+            }
+
+            const total_venta = producto.precio_venta * parseInt(venta.cantidad);
+            const payload = {
+                ...venta,
+                total_venta,
+                producto: producto.id
+            };
+
+            await apiClient.post('/ventas/', payload);
+            setVenta({
+                producto: '',
+                cantidad: 1,
+                fecha_venta: new Date().toISOString().split('T')[0]
             });
-            alert('¡Venta registrada con éxito!');
-            onVentaSuccess(); // Llama a la función para actualizar el stock
-            setVenta({ producto: '', cantidad: 1 });
+            onVentaSuccess();
         } catch (error) {
-            console.error("Error al registrar venta:", error.response?.data);
-            alert(`Error: ${JSON.stringify(error.response.data)}`);
+            console.error("Error al registrar venta:", error);
+            alert("Error al registrar la venta");
         }
     };
 
     return (
-        <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            <FormControl fullWidth>
-                <InputLabel>Producto</InputLabel>
-                <Select name="producto" value={venta.producto} label="Producto" onChange={handleChange}>
-                    {productos.map(p => <MenuItem key={p.id} value={p.id} disabled={p.stock <= 0}>{p.nombre} (Stock: {p.stock})</MenuItem>)}
-                </Select>
-            </FormControl>
-            <TextField name="cantidad" label="Cantidad" type="number" InputProps={{ inputProps: { min: 1 } }} value={venta.cantidad} onChange={handleChange} sx={{width: 150}}/>
-            <Button type="submit" variant="contained">Vender</Button>
-        </Box>
+        <Card className="shadow border-0 w-100 bg-white p-3">
+            <Card.Title as="h4" className="mb-4 text-center text-primary">Registrar Nueva Venta</Card.Title>
+            <Form onSubmit={handleSubmit}>
+                <Row>
+                    <Col md={4}>
+                        <FormGroup className="mb-3">
+                            <FormLabel>Producto</FormLabel>
+                            <Form.Select
+                                name="producto"
+                                value={venta.producto}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="">Seleccionar producto...</option>
+                                {productos.map(producto => (
+                                    <option key={producto.id} value={producto.id}>
+                                        {producto.nombre} - Stock: {producto.stock}
+                                    </option>
+                                ))}
+                            </Form.Select>
+                        </FormGroup>
+                    </Col>
+                    <Col md={2}>
+                        <FormGroup className="mb-3">
+                            <FormLabel>Cantidad</FormLabel>
+                            <FormControl
+                                type="number"
+                                name="cantidad"
+                                value={venta.cantidad}
+                                onChange={handleChange}
+                                min="1"
+                                required
+                            />
+                        </FormGroup>
+                    </Col>
+                    <Col md={3}>
+                        <FormGroup className="mb-3">
+                            <FormLabel>Fecha de Venta</FormLabel>
+                            <FormControl
+                                type="date"
+                                name="fecha_venta"
+                                value={venta.fecha_venta}
+                                onChange={handleChange}
+                                required
+                            />
+                        </FormGroup>
+                    </Col>
+                    <Col md={3} className="d-flex align-items-end">
+                        <Button type="submit" variant="primary" className="w-100">
+                            Registrar Venta
+                        </Button>
+                    </Col>
+                </Row>
+            </Form>
+        </Card>
     );
 };
 
-// --- Componente para el Stock Semanal ---
+// --- Componente de Stock Semanal ---
 const StockSemanalComponent = ({ productos, ventas }) => {
-    const [selectedWeek, setSelectedWeek] = useState(0); // Índice de la semana seleccionada
+    const [selectedWeek, setSelectedWeek] = useState(null);
     
-    // Función para obtener los miércoles del mes actual y el anterior
     const getWednesdays = () => {
         const wednesdays = [];
-        const now = new Date();
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
+        const today = new Date();
+        const currentYear = today.getFullYear();
         
-        // Obtener miércoles del mes actual
-        const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
-        const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
-        
-        // Ajustar al primer miércoles del mes
-        let firstWednesday = new Date(firstDayOfMonth);
-        while (firstWednesday.getDay() !== 3) { // 3 = miércoles
-            firstWednesday.setDate(firstWednesday.getDate() + 1);
-        }
-        
-        // Agregar todos los miércoles del mes
-        while (firstWednesday <= lastDayOfMonth) {
-            wednesdays.push(new Date(firstWednesday));
-            firstWednesday.setDate(firstWednesday.getDate() + 7);
-        }
-        
-        // Si estamos a principios de mes, agregar los miércoles del mes anterior
-        if (now.getDate() < 7) {
-            const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-            const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-            const firstDayOfPrevMonth = new Date(prevYear, prevMonth, 1);
-            const lastDayOfPrevMonth = new Date(prevYear, prevMonth + 1, 0);
-            
-            let prevWednesday = new Date(firstDayOfPrevMonth);
-            while (prevWednesday.getDay() !== 3) {
-                prevWednesday.setDate(prevWednesday.getDate() + 1);
-            }
-            
-            while (prevWednesday <= lastDayOfPrevMonth) {
-                wednesdays.unshift(new Date(prevWednesday));
-                prevWednesday.setDate(prevWednesday.getDate() + 7);
+        for (let month = 0; month < 12; month++) {
+            for (let day = 1; day <= 31; day++) {
+                const date = new Date(currentYear, month, day);
+                if (date.getDay() === 3) { // 3 es miércoles
+                    wednesdays.push(new Date(date));
+                }
             }
         }
         
         return wednesdays;
     };
-
-    const wednesdays = getWednesdays();
     
     const getWeekDates = (wednesdayDate) => {
-        const startOfWeek = new Date(wednesdayDate);
-        startOfWeek.setDate(wednesdayDate.getDate() - 3); // 3 días antes del miércoles
-        const endOfWeek = new Date(wednesdayDate);
-        endOfWeek.setDate(wednesdayDate.getDate() + 3); // 3 días después del miércoles
-        return { startOfWeek, endOfWeek };
+        const dates = [];
+        const startDate = new Date(wednesdayDate);
+        startDate.setDate(startDate.getDate() - 3); // Comienza el domingo
+        
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(startDate);
+            date.setDate(date.getDate() + i);
+            dates.push(date);
+        }
+        
+        return dates;
     };
-
-    const getStockSemanal = useMemo(() => {
-        if (!wednesdays[selectedWeek]) return [];
-        
-        const { startOfWeek, endOfWeek } = getWeekDates(wednesdays[selectedWeek]);
-        
-        return productos.map(producto => {
-            // Filtrar ventas de la semana seleccionada para este producto
-            const ventasSemana = ventas.filter(v => {
-                const fechaVenta = new Date(v.fecha_venta);
-                return fechaVenta >= startOfWeek && fechaVenta <= endOfWeek && v.producto === producto.id;
-            });
-
-            // Calcular total vendido en la semana
-            const totalVendido = ventasSemana.reduce((acc, v) => acc + v.cantidad, 0);
-            
-            // Calcular promedio diario
-            const promedioDiario = totalVendido / 7;
-
-            // Determinar tendencia
-            const tendencia = promedioDiario > 0 ? 'up' : 'neutral';
-
-            return {
-                ...producto,
-                ventasSemana: totalVendido,
-                promedioDiario,
-                tendencia
-            };
-        });
-    }, [productos, ventas, selectedWeek, wednesdays]);
 
     const formatDate = (date) => {
         return date.toLocaleDateString('es-ES', { 
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short'
         });
     };
 
-    return (
-        <Box>
-            <Box sx={{ mb: 3, display: 'flex', gap: 2, alignItems: 'center' }}>
-                <FormControl>
-                    <InputLabel>Semana</InputLabel>
-                    <Select 
-                        value={selectedWeek} 
-                        label="Semana" 
-                        onChange={(e) => setSelectedWeek(e.target.value)}
-                    >
-                        {wednesdays.map((wednesday, index) => (
-                            <MenuItem key={index} value={index}>
-                                Semana del {formatDate(wednesday)}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-            </Box>
+    const wednesdays = getWednesdays();
+    const weekDates = selectedWeek ? getWeekDates(selectedWeek) : [];
 
-            <Grid container spacing={2}>
-                {getStockSemanal.map(producto => (
-                    <Grid item xs={12} sm={6} md={4} key={producto.id}>
-                        <Card>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                    <Avatar src={producto.foto} sx={{ width: 50, height: 50, mr: 2 }} />
-                                    <Typography variant="h6">{producto.nombre}</Typography>
-                                </Box>
-                                <Typography variant="body2" color="text.secondary">
-                                    Stock actual: {producto.stock}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    Ventas esta semana: {producto.ventasSemana}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    Promedio diario: {producto.promedioDiario.toFixed(1)}
-                                </Typography>
-                                <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                                    {producto.tendencia === 'up' ? (
-                                        <TrendingUpIcon color="success" />
-                                    ) : producto.tendencia === 'down' ? (
-                                        <TrendingDownIcon color="error" />
-                                    ) : null}
-                                    <Typography 
-                                        variant="body2" 
-                                        color={producto.tendencia === 'up' ? 'success.main' : 'error.main'}
-                                        sx={{ ml: 1 }}
-                                    >
-                                        {producto.tendencia === 'up' ? 'Tendencia al alza' : 
-                                         producto.tendencia === 'down' ? 'Tendencia a la baja' : 
-                                         'Sin cambios'}
-                                    </Typography>
-                                </Box>
-                            </CardContent>
+    return (
+        <Card className="shadow border-0 w-100 bg-white p-3">
+            <Card.Title as="h4" className="mb-4 text-center text-primary">Stock Semanal</Card.Title>
+            
+            <FormGroup className="mb-4">
+                <FormLabel>Seleccionar Semana</FormLabel>
+                <Form.Select
+                    value={selectedWeek ? selectedWeek.toISOString() : ''}
+                    onChange={(e) => setSelectedWeek(new Date(e.target.value))}
+                >
+                    <option value="">Seleccionar semana...</option>
+                        {wednesdays.map((wednesday, index) => (
+                        <option key={index} value={wednesday.toISOString()}>
+                                Semana del {formatDate(wednesday)}
+                        </option>
+                    ))}
+                </Form.Select>
+            </FormGroup>
+
+            {selectedWeek && (
+                <Table responsive hover className="user-table align-items-center">
+                    <thead className="bg-light">
+                        <tr>
+                            <th>Producto</th>
+                            {weekDates.map((date, index) => (
+                                <th key={index} className="text-center">
+                                    {formatDate(date)}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {productos.map(producto => (
+                            <tr key={producto.id}>
+                                <td>{producto.nombre}</td>
+                                {weekDates.map((date, index) => {
+                                    const ventasDelDia = ventas.filter(v => {
+                                        const ventaDate = new Date(v.fecha_venta);
+                                        return ventaDate.toDateString() === date.toDateString() &&
+                                               v.producto === producto.id;
+                                    });
+                                    const stockVendido = ventasDelDia.reduce((acc, v) => acc + v.cantidad, 0);
+                                    const stockInicial = producto.stock + stockVendido;
+                                    
+                                    return (
+                                        <td key={index} className="text-center">
+                                            {stockInicial}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        ))}
+                    </tbody>
+                </Table>
+            )}
                         </Card>
-                    </Grid>
-                ))}
-            </Grid>
-        </Box>
     );
 };
 
-// --- Componente Principal de la Página de Inventario ---
+// --- Componente Principal de Inventario ---
 const InventarioPage = () => {
-    const [tabValue, setTabValue] = useState(0);
+    const [activeTab, setActiveTab] = useState('productos');
     const [productos, setProductos] = useState([]);
     const [ventas, setVentas] = useState([]);
-    const [formOpen, setFormOpen] = useState(false);
-    const [editingProduct, setEditingProduct] = useState(null);
 
-    const fetchAllData = useCallback(async () => {
+    const fetchData = async () => {
         try {
             const [productosRes, ventasRes] = await Promise.all([
-                apiClient.get('/productos/?limit=1000'),
-                apiClient.get('/ventas/?limit=10000')
+                apiClient.get('/productos/'),
+                apiClient.get('/ventas/')
             ]);
             setProductos(productosRes.data.results || productosRes.data);
             setVentas(ventasRes.data.results || ventasRes.data);
         } catch (error) {
-            console.error("Error al cargar datos:", error);
+            console.error("Error fetching data:", error);
         }
-    }, []);
-
-    useEffect(() => {
-        fetchAllData();
-    }, [fetchAllData]);
-
-    const handleTabChange = (event, newValue) => setTabValue(newValue);
-
-    const handleOpenEditForm = (product) => {
-        setEditingProduct(product);
-        setFormOpen(true);
     };
 
-    const handleSave = async (data, file, id) => {
-        const formData = new FormData();
-        Object.keys(data).forEach(key => formData.append(key, data[key]));
-        if (file) {
-            formData.append('foto', file);
-        }
+    useEffect(() => {
+        fetchData();
+    }, []);
 
-        try {
-            if (id) {
-                await apiClient.patch(`/productos/${id}/`, formData, { headers: { 'Content-Type': 'multipart/form-data' }});
-            } else {
-                await apiClient.post('/productos/', formData, { headers: { 'Content-Type': 'multipart/form-data' }});
-            }
-            fetchAllData();
-            setFormOpen(false);
-            setEditingProduct(null);
-        } catch (error) {
-            console.error("Error al guardar producto:", error.response?.data);
-        }
+    const handleProductUpdate = () => {
+        fetchData();
     };
 
     return (
-        <Box sx={{
-            minHeight: '100vh',
-            width: '100%',
-            background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-            py: { xs: 3, md: 6 },
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-        }}>
-            <Container maxWidth={false} sx={{
-                px: { xs: 2, sm: 3, md: 4 },
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-            }}>
-                <Typography
-                    variant="h2"
-                    gutterBottom
-                    align="center"
-                    sx={{
-                        fontWeight: 900,
-                        mb: 8,
-                        background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-                        backgroundClip: 'text',
-                        textFillColor: 'transparent',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        fontSize: { xs: '2.5rem', md: '3.5rem' },
-                    }}
-                >
-                    Gestión de Inventario y Ventas
-                </Typography>
-                <Paper sx={{ p: 3, width: '100%' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: 1, borderColor: 'divider' }}>
-                        <Tabs value={tabValue} onChange={handleTabChange}>
-                            <Tab label="Stock Semanal" />
-                            <Tab label="Registrar Venta" />
-                            <Tab label="Lista de Productos" />
-                            <Tab label="Historial de Ventas" />
-                        </Tabs>
-                        {tabValue === 2 && (
-                            <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenEditForm(null)} sx={{ mb: 1 }}>
-                                Agregar Producto
-                            </Button>
-                        )}
-                    </Box>
+        <Container fluid className="px-0">
+            <Row className="justify-content-center">
+                <Col xl={10} lg={12}>
+                    <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
+                        <h1 className="h2 mb-0 text-center w-100">Gestión de Inventario</h1>
+                    </div>
 
-                    <TabPanel value={tabValue} index={0}>
-                        <StockSemanalComponent productos={productos} ventas={ventas} />
-                    </TabPanel>
-                    <TabPanel value={tabValue} index={1}>
-                        <VentaFormComponent productos={productos} onVentaSuccess={fetchAllData} />
-                    </TabPanel>
-                    <TabPanel value={tabValue} index={2}>
-                        <ProductListComponent onProductUpdate={fetchAllData} onEdit={handleOpenEditForm} />
-                    </TabPanel>
-                    <TabPanel value={tabValue} index={3}>
-                        <Typography>Historial de ventas (en desarrollo)</Typography>
-                    </TabPanel>
+                    <Nav variant="pills" className="mb-4">
+                        <NavItem>
+                            <NavLink 
+                                active={activeTab === 'productos'} 
+                                onClick={() => setActiveTab('productos')}
+                            >
+                                Productos
+                            </NavLink>
+                        </NavItem>
+                        <NavItem>
+                            <NavLink 
+                                active={activeTab === 'ventas'} 
+                                onClick={() => setActiveTab('ventas')}
+                            >
+                                Ventas
+                            </NavLink>
+                        </NavItem>
+                        <NavItem>
+                            <NavLink 
+                                active={activeTab === 'stock'} 
+                                onClick={() => setActiveTab('stock')}
+                            >
+                                Stock Semanal
+                            </NavLink>
+                        </NavItem>
+                    </Nav>
 
-                    <ProductForm 
-                        open={formOpen} 
-                        onClose={() => setFormOpen(false)} 
-                        onSave={handleSave} 
-                        product={editingProduct} 
-                    />
-                </Paper>
+                    <TabContent>
+                        <TabPane active={activeTab === 'productos'}>
+                            <ProductListComponent 
+                                onProductUpdate={handleProductUpdate}
+                            />
+                        </TabPane>
+                        <TabPane active={activeTab === 'ventas'}>
+                            <VentaFormComponent 
+                                productos={productos}
+                                onVentaSuccess={handleProductUpdate}
+                            />
+                        </TabPane>
+                        <TabPane active={activeTab === 'stock'}>
+                            <StockSemanalComponent 
+                                productos={productos}
+                                ventas={ventas}
+                            />
+                        </TabPane>
+                    </TabContent>
+                </Col>
+            </Row>
             </Container>
-        </Box>
     );
 };
 
-// --- ¡LA LÍNEA MÁS IMPORTANTE QUE FALTABA! ---
 export default InventarioPage;

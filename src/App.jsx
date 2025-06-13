@@ -23,8 +23,7 @@ function App() {
           flexDirection: 'column'
         }}>
           <Navbar />
-          <Container 
-            maxWidth="xl" 
+          <Box 
             sx={{ 
               py: 4,
               flex: 1,
@@ -40,7 +39,7 @@ function App() {
               <Route path="/finanzas" element={<FinanzasPage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Routes>
-          </Container>
+          </Box>
         </Box>
       </Router>
     </ThemeProvider>
