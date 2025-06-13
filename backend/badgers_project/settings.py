@@ -158,6 +158,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://thebadgersadmin.netlify.app",
     "http://localhost:5173", # La dirección de tu frontend de React (Vite)
     "http://127.0.0.1:5173",
+    "https://badgersadmin.netlify.app",
+]
 ]
 CORS_ALLOW_ALL_HEADERS = True
 CORS_ALLOW_CREDENTIALS = True
