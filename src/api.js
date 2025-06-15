@@ -13,4 +13,27 @@ const apiClient = axios.create({
   },
 });
 
+// Interceptor para agregar el token automáticamente
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('access');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 export default apiClient;
+
+export function apiFetch(url, options = {}) {
+  const token = localStorage.getItem('access');
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      'Authorization': token ? `Bearer ${token}` : undefined,
+    },
+  });
+}

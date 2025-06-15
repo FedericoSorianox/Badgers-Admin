@@ -4,6 +4,10 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import SocioViewSet, PagoViewSet, ProductoViewSet, VentaViewSet, GastoViewSet, eliminar_socios_sin_ci
 from .views import DashboardStatsView
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 # --- PASO 1: Creamos el router pero SIN registrar 'socios' ---
 # El router seguirá manejando automáticamente Pagos, Productos, etc.
@@ -43,4 +47,6 @@ urlpatterns = [
     path('socios/limpiar_sin_ci/', eliminar_socios_sin_ci, name='eliminar-socios-sin-ci'),
     path('socios/<str:ci>/', socio_detail, name='socio-detail'),
     path('dashboard-stats/', DashboardStatsView.as_view(), name='dashboard-stats'),
+    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
