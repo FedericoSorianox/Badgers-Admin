@@ -9,6 +9,7 @@ from rest_framework import viewsets, status, filters
 from rest_framework.views import APIView
 from .models import Socio, Pago, Producto, Venta, Gasto
 from .serializers import SocioSerializer, PagoSerializer, ProductoSerializer, VentaSerializer, GastoSerializer
+from rest_framework.permissions import IsAuthenticated
 
 # Función de ayuda para procesar fechas de forma robusta
 def parse_date_from_csv(date_str):
@@ -30,6 +31,7 @@ class SocioViewSet(viewsets.ModelViewSet):
     lookup_field = 'ci'
     filter_backends = [filters.SearchFilter]
     search_fields = ['nombre', 'ci']
+    permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=['post'], parser_classes=[MultiPartParser])
     def import_csv(self, request, *args, **kwargs):
@@ -92,6 +94,7 @@ class PagoViewSet(viewsets.ModelViewSet):
     queryset = Pago.objects.all().order_by('-fecha_pago')
     serializer_class = PagoSerializer
     pagination_class = None  # Desactivamos la paginación
+    permission_classes = [IsAuthenticated]
     
     @action(detail=False, methods=['post'], parser_classes=[MultiPartParser])
     def import_csv(self, request, *args, **kwargs):
@@ -137,6 +140,7 @@ class PagoViewSet(viewsets.ModelViewSet):
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all().order_by('nombre')
     serializer_class = ProductoSerializer
+    permission_classes = [IsAuthenticated]
     
     @action(detail=False, methods=['post'], parser_classes=[MultiPartParser])
     def import_csv(self, request, *args, **kwargs):
@@ -177,11 +181,13 @@ class VentaViewSet(viewsets.ModelViewSet):
     queryset = Venta.objects.all().order_by('-fecha_venta')
     serializer_class = VentaSerializer
     pagination_class = None  # Desactivamos la paginación
+    permission_classes = [IsAuthenticated]
 
 
 class GastoViewSet(viewsets.ModelViewSet):
     queryset = Gasto.objects.all().order_by('-fecha')
     serializer_class = GastoSerializer
+    permission_classes = [IsAuthenticated]
     
 class DashboardStatsView(APIView):
     def get(self, request, *args, **kwargs):

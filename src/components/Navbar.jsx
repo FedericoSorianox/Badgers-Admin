@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography, Button, Box, Container } from '@mui/material';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import PaymentIcon from '@mui/icons-material/Payment';
@@ -11,6 +11,7 @@ import badgersLogo from '../assets/badgers-logo.png';
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: <DashboardIcon /> },
@@ -20,6 +21,12 @@ const Navbar = () => {
     { path: '/finanzas', label: 'Finanzas', icon: <AccountBalanceIcon /> },
     { path: '/admin', label: 'Admin', icon: <AdminPanelSettingsIcon /> },
   ];
+
+  const handleLogout = () => {
+    localStorage.removeItem('access');
+    localStorage.removeItem('refresh');
+    navigate('/login');
+  };
 
   return (
     <AppBar position="sticky" elevation={0} sx={{ 
@@ -77,6 +84,10 @@ const Navbar = () => {
               </Button>
             ))}
           </Box>
+
+          <div className="ms-auto d-flex align-items-center">
+            <button onClick={handleLogout} className="btn btn-outline-danger ms-2">Cerrar sesión</button>
+          </div>
         </Toolbar>
       </Container>
     </AppBar>

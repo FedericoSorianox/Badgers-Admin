@@ -1,6 +1,6 @@
 // src/App.jsx
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider, CssBaseline, Box } from '@mui/material';
 import theme from './theme';
 import Navbar from './components/Navbar';
@@ -10,6 +10,16 @@ import PagosPage from './pages/PagosPage';
 import InventarioPage from './pages/InventarioPage';
 import FinanzasPage from './pages/FinanzasPage';
 import AdminPage from './pages/AdminPage';
+import LoginPage from './pages/LoginPage';
+
+function PrivateRoute({ children }) {
+  const token = localStorage.getItem('access');
+  const location = useLocation();
+  if (!token) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  return children;
+}
 
 function App() {
   return (
@@ -36,12 +46,14 @@ function App() {
             }}
           >
             <Routes>
-              <Route path="/" element={<DashboardPage />} />
-              <Route path="/socios" element={<SociosPage />} />
-              <Route path="/pagos" element={<PagosPage />} />
-              <Route path="/inventario" element={<InventarioPage />} />
-              <Route path="/finanzas" element={<FinanzasPage />} />
-              <Route path="/admin" element={<AdminPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
+              <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
+              <Route path="/socios" element={<PrivateRoute><SociosPage /></PrivateRoute>} />
+              <Route path="/pagos" element={<PrivateRoute><PagosPage /></PrivateRoute>} />
+              <Route path="/inventario" element={<PrivateRoute><InventarioPage /></PrivateRoute>} />
+              <Route path="/finanzas" element={<PrivateRoute><FinanzasPage /></PrivateRoute>} />
+              <Route path="/admin" element={<PrivateRoute><AdminPage /></PrivateRoute>} />
             </Routes>
           </Box>
         </Box>
