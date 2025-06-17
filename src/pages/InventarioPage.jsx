@@ -27,7 +27,21 @@ const ProductForm = ({ show, onHide, onSave, product, isViewOnly = false }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSave(formData, fotoFile, product?.id);
+        const data = new FormData();
+        
+        // Agregar todos los campos del formulario excepto la foto
+        Object.keys(formData).forEach(key => {
+            if (key !== 'foto') {
+                data.append(key, formData[key]);
+            }
+        });
+        
+        // Agregar la foto solo si hay un archivo
+        if (fotoFile) {
+            data.append('foto', fotoFile);
+        }
+        
+        onSave(data, fotoFile, product?.id);
     };
 
     return (
@@ -145,18 +159,26 @@ const ProductDetailPanel = ({ product, show, onHide, onEdit, onDelete }) => {
         try {
             const data = new FormData();
             Object.keys(formData).forEach(key => {
-                if (key !== 'foto') data.append(key, formData[key]);
+                if (key !== 'foto') {
+                    data.append(key, formData[key]);
+                }
             });
+            
             if (fotoFile) {
                 data.append('foto', fotoFile);
             }
 
-            await apiClient.patch(`/productos/${product.id}/`, data, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+            const response = await apiClient.patch(`/productos/${product.id}/`, data, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
             });
             
             setIsEditing(false);
-            onEdit(formData);
+            if (typeof onEdit === 'function') {
+                onEdit(response.data);
+            }
+            onHide();
         } catch (error) {
             console.error("Error al guardar producto:", error);
             alert("Error al guardar los cambios");
@@ -304,22 +326,16 @@ const ProductListComponent = ({ onProductUpdate, onEdit }) => {
         }
     };
 
-    const handleSave = async (data, file, id) => {
+    const handleSave = async (formData, file, id) => {
         try {
-            const formData = new FormData();
-            Object.keys(data).forEach(key => {
-                formData.append(key, data[key]);
-            });
-            if (file) {
-                formData.append('foto', file);
-            }
-
+            let response;
+            
             if (id) {
-                await apiClient.patch(`/productos/${id}/`, formData, {
+                response = await apiClient.patch(`/productos/${id}/`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
             } else {
-                await apiClient.post('/productos/', formData, {
+                response = await apiClient.post('/productos/', formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
             }
@@ -328,7 +344,11 @@ const ProductListComponent = ({ onProductUpdate, onEdit }) => {
             fetchProducts();
         } catch (error) {
             console.error("Error saving product:", error);
-            alert("Error al guardar el producto");
+            if (error.response && error.response.data) {
+                alert("Error al guardar el producto: " + JSON.stringify(error.response.data));
+            } else {
+                alert("Error al guardar el producto");
+            }
         }
     };
 
@@ -439,7 +459,7 @@ const ProductListComponent = ({ onProductUpdate, onEdit }) => {
 };
 
 // --- Componente de Formulario de Venta ---
-const VentaFormComponent = ({ productos, onVentaSuccess }) => {
+const VentaFormComponent = ({ productos, onVentaSuccess, ventas }) => {
     const [venta, setVenta] = useState({
         producto: '',
         cantidad: 1,
@@ -447,6 +467,18 @@ const VentaFormComponent = ({ productos, onVentaSuccess }) => {
     });
 
     const handleChange = (e) => setVenta({ ...venta, [e.target.name]: e.target.value });
+
+    const handleDelete = async (ventaId) => {
+        if (window.confirm('¿Estás seguro de que deseas eliminar esta venta?')) {
+            try {
+                await apiClient.delete(`/ventas/${ventaId}/`);
+                onVentaSuccess(); // Recargar los datos
+            } catch (error) {
+                console.error("Error al eliminar la venta:", error);
+                alert("Error al eliminar la venta");
+            }
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -482,8 +514,19 @@ const VentaFormComponent = ({ productos, onVentaSuccess }) => {
         }
     };
 
+    // --- Historial de Ventas ---
+    const ventasConNombre = ventas.map(v => {
+        const prod = productos.find(p => p.id === v.producto);
+        return {
+            ...v,
+            nombre_producto: prod ? prod.nombre : 'Desconocido',
+            precio_venta: prod ? prod.precio_venta : 0
+        };
+    }).sort((a, b) => new Date(b.fecha_venta) - new Date(a.fecha_venta)); // Ordenar por fecha más reciente
+
     return (
-        <Card className="shadow border-0 w-100 bg-white p-3">
+        <>
+        <Card className="shadow border-0 w-100 bg-white p-3 mb-4">
             <Card.Title as="h4" className="mb-4 text-center text-primary">Registrar Nueva Venta</Card.Title>
             <Form onSubmit={handleSubmit}>
                 <Row>
@@ -538,6 +581,42 @@ const VentaFormComponent = ({ productos, onVentaSuccess }) => {
                 </Row>
             </Form>
         </Card>
+        <Card className="shadow border-0 w-100 bg-white p-3">
+            <Card.Title as="h5" className="mb-4 text-center text-secondary">Historial de Ventas</Card.Title>
+            <Table responsive hover className="user-table align-items-center">
+                <thead className="bg-light">
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Total</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {ventasConNombre.length === 0 ? (
+                        <tr><td colSpan="5" className="text-center">No hay ventas registradas.</td></tr>
+                    ) : ventasConNombre.map((venta) => (
+                        <tr key={venta.id}>
+                            <td>{venta.nombre_producto}</td>
+                            <td>{venta.cantidad}</td>
+                            <td>${venta.total_venta}</td>
+                            <td>{new Date(venta.fecha_venta).toLocaleDateString()}</td>
+                            <td>
+                                <Button 
+                                    variant="link" 
+                                    className="p-0 text-danger"
+                                    onClick={() => handleDelete(venta.id)}
+                                >
+                                    <FontAwesomeIcon icon={faTrash} />
+                                </Button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </Table>
+        </Card>
+        </>
     );
 };
 
@@ -717,6 +796,7 @@ const InventarioPage = () => {
                         <TabPane active={activeTab === 'ventas'}>
                             <VentaFormComponent 
                                 productos={productos}
+                                ventas={ventas}
                                 onVentaSuccess={handleProductUpdate}
                             />
                         </TabPane>

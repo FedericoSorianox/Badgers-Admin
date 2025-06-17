@@ -40,3 +40,24 @@
 .read-the-docs {
   color: #888;
 }
+
+.modal {
+  z-index: 1050 !important;
+}
+
+.modal-socio {
+    z-index: 1050 !important;
+}
+
+.modal-socio .modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-backdrop {
+    z-index: 1040 !important;
+}
+
+.sticky-top {
+  z-index: 1030 !important;
+}

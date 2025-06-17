@@ -25,6 +25,22 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Interceptor para manejar errores de autenticación
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Limpiar el localStorage
+      localStorage.removeItem('access');
+      localStorage.removeItem('refresh');
+      
+      // Redirigir al login
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default apiClient;
 
 export function apiFetch(url, options = {}) {
@@ -35,5 +51,16 @@ export function apiFetch(url, options = {}) {
       ...(options.headers || {}),
       'Authorization': token ? `Bearer ${token}` : undefined,
     },
+  }).then(response => {
+    if (response.status === 401) {
+      // Limpiar el localStorage
+      localStorage.removeItem('access');
+      localStorage.removeItem('refresh');
+      
+      // Redirigir al login
+      window.location.href = '/login';
+      throw new Error('Unauthorized');
+    }
+    return response;
   });
 }

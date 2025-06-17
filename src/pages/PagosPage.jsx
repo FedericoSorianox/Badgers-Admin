@@ -3,20 +3,27 @@ import React, { useState, useEffect } from 'react';
 import apiClient from '../api';
 import { 
     Card, Row, Col, Container, Button, Form, Table,
-    Modal, ListGroup, FormGroup, FormLabel, FormControl
+    Modal, ListGroup, FormGroup, FormLabel, FormControl, InputGroup, Alert
 } from '@themesberg/react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
     faCheckCircle, faTimesCircle, faMinusCircle, 
-    faInfoCircle, faStar, faMoneyBill 
+    faInfoCircle, faStar, faMoneyBill
 } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 
 // Lista de socios que no pagan mensualidad
 const SOCIOS_SIN_PAGO = [
     'Gonzalo Fernandez',
     'Federico Soriano',
     'Mariana Peralta',
-    'Guillermo Viera'
+    'Guillermo Viera',
+    'Andrea Lostorto'
+];
+
+const mesesNombres = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
 // Componente para el diálogo de confirmación de pago
@@ -31,24 +38,47 @@ const ConfirmPagoDialog = ({ show, onHide, onConfirm, socio, mes, año }) => {
     return (
         <Modal show={show} onHide={onHide} centered>
             <Modal.Header closeButton>
-                <Modal.Title>Confirmar Pago</Modal.Title>
+                <Modal.Title>Registrar Pago</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <p>¿Deseas registrar el pago para {socio?.nombre} del mes {mes} de {año}?</p>
-                <FormGroup>
-                    <FormLabel>Monto</FormLabel>
-                    <FormControl
-                        type="number"
-                        value={monto}
-                        onChange={(e) => setMonto(parseFloat(e.target.value))}
-                    />
-                </FormGroup>
+                <div className="mb-4">
+                    <h5>{socio?.nombre}</h5>
+                    <p className="text-muted mb-2">
+                        Registrando pago para {mesesNombres[mes - 1]} de {año}
+                    </p>
+                </div>
+                <Form.Group className="mb-3">
+                    <Form.Label>Monto</Form.Label>
+                    <InputGroup>
+                        <InputGroup.Text>$</InputGroup.Text>
+                        <Form.Control
+                            type="number"
+                            value={monto}
+                            onChange={(e) => setMonto(parseFloat(e.target.value))}
+                        />
+                    </InputGroup>
+                </Form.Group>
             </Modal.Body>
-            <Modal.Footer>
-                <Button variant="secondary" onClick={onHide}>Cancelar</Button>
-                <Button variant="primary" onClick={handleConfirm}>
-                    Confirmar
-                </Button>
+            <Modal.Footer className="d-flex justify-content-between">
+                <div>
+                    {socio?.celular && (
+                        <Button 
+                            variant="outline-success" 
+                            onClick={() => window.open(`https://wa.me/${socio.celular.replace(/\D/g, '')}`)}
+                        >
+                            <FontAwesomeIcon icon={faWhatsapp} className="me-2" />
+                            WhatsApp
+                        </Button>
+                    )}
+                </div>
+                <div>
+                    <Button variant="secondary" onClick={onHide} className="me-2">
+                        Cancelar
+                    </Button>
+                    <Button variant="primary" onClick={handleConfirm}>
+                        Registrar Pago
+                    </Button>
+                </div>
             </Modal.Footer>
         </Modal>
     );
@@ -88,33 +118,52 @@ const InfoDialog = ({ show, onHide, onConfirm, socio, mes, año, isSocioSinPago 
     return (
         <Modal show={show} onHide={onHide} centered>
             <Modal.Header closeButton>
-                <Modal.Title>Información del Mes</Modal.Title>
+                <Modal.Title>Registrar Pago</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <p>Este mes no aplica para {socio?.nombre} porque:</p>
-                <ListGroup variant="flush">
-                    <ListGroup.Item>• Fecha de registro: {fechaRegistro.toLocaleDateString()}</ListGroup.Item>
-                    <ListGroup.Item>• Mes seleccionado: {mes}/{año}</ListGroup.Item>
-                    <ListGroup.Item>• Diferencia: {Math.abs(diasDiferencia)} días {diasDiferencia < 0 ? 'antes' : 'después'} del registro</ListGroup.Item>
-                </ListGroup>
-                
-                <Card className="mt-3 p-3 bg-light">
-                    <p className="mb-2">¿Deseas registrar un pago de todos modos?</p>
-                    <FormGroup>
-                        <FormLabel>Monto</FormLabel>
-                        <FormControl
+                <div className="mb-4">
+                    <h5>{socio?.nombre}</h5>
+                    <p className="text-muted mb-2">
+                        Registrando pago para {mesesNombres[mes - 1]} de {año}
+                    </p>
+                    {diasDiferencia < 30 && (
+                        <Alert variant="info">
+                            Este socio se registró hace menos de un mes.
+                        </Alert>
+                    )}
+                </div>
+                <Form.Group className="mb-3">
+                    <Form.Label>Monto</Form.Label>
+                    <InputGroup>
+                        <InputGroup.Text>$</InputGroup.Text>
+                        <Form.Control
                             type="number"
                             value={monto}
                             onChange={(e) => setMonto(parseFloat(e.target.value))}
                         />
-                    </FormGroup>
-                </Card>
+                    </InputGroup>
+                </Form.Group>
             </Modal.Body>
-            <Modal.Footer>
-                <Button variant="secondary" onClick={onHide}>Cerrar</Button>
-                <Button variant="primary" onClick={handleConfirm}>
-                    Registrar Pago
-                </Button>
+            <Modal.Footer className="d-flex justify-content-between">
+                <div>
+                    {socio?.celular && (
+                        <Button 
+                            variant="outline-success" 
+                            onClick={() => window.open(`https://wa.me/${socio.celular.replace(/\D/g, '')}`)}
+                        >
+                            <FontAwesomeIcon icon={faWhatsapp} className="me-2" />
+                            WhatsApp
+                        </Button>
+                    )}
+                </div>
+                <div>
+                    <Button variant="secondary" onClick={onHide} className="me-2">
+                        Cancelar
+                    </Button>
+                    <Button variant="primary" onClick={handleConfirm}>
+                        Registrar Pago
+                    </Button>
+                </div>
             </Modal.Footer>
         </Modal>
     );
@@ -135,9 +184,9 @@ const PagosPage = () => {
                 apiClient.get(`/pagos/?año=${selectedYear}&limit=10000`)
             ]);
             
-            // Filtrar los socios que no pagan mensualidad
+            // Filtrar los socios que no pagan mensualidad y que están activos
             const sociosFiltrados = (sociosRes.data.results ? sociosRes.data.results : sociosRes.data)
-                .filter(socio => !SOCIOS_SIN_PAGO.includes(socio.nombre));
+                .filter(socio => !SOCIOS_SIN_PAGO.includes(socio.nombre) && socio.activo);
             
             setSocios(sociosFiltrados);
             setPagos(pagosRes.data.results ? pagosRes.data.results : pagosRes.data);
@@ -177,7 +226,6 @@ const PagosPage = () => {
         }
     };
 
-    const mesesNombres = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
     const years = Array.from({length: 10}, (_, i) => new Date().getFullYear() - i);
 
     const getStatus = (socio, mes) => {

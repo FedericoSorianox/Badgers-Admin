@@ -183,6 +183,26 @@ class VentaViewSet(viewsets.ModelViewSet):
     pagination_class = None  # Desactivamos la paginación
     permission_classes = [IsAuthenticated]
 
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        producto_id = data.get('producto')
+        cantidad = int(data.get('cantidad', 1))
+        try:
+            producto = Producto.objects.get(id=producto_id)
+        except Producto.DoesNotExist:
+            return Response({'error': 'Producto no encontrado.'}, status=status.HTTP_400_BAD_REQUEST)
+        if producto.stock < cantidad:
+            return Response({'error': 'No hay suficiente stock disponible.'}, status=status.HTTP_400_BAD_REQUEST)
+        # Descontar stock
+        producto.stock -= cantidad
+        producto.save()
+        # Crear la venta normalmente
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
 
 class GastoViewSet(viewsets.ModelViewSet):
     queryset = Gasto.objects.all().order_by('-fecha')

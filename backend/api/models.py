@@ -2,6 +2,12 @@
 from django.db import models
 
 class Socio(models.Model):
+    INACTIVE_CHOICES = [
+        ('vacaciones', 'Vacaciones'),
+        ('temporal', 'Ausencia Temporal'),
+        ('otro', 'Otro')
+    ]
+    
     ci = models.CharField(max_length=20, primary_key=True)
     nombre = models.CharField(max_length=255)
     celular = models.CharField(max_length=50, blank=True, null=True)
@@ -14,7 +20,10 @@ class Socio(models.Model):
     foto = models.ImageField(upload_to='socios_fotos/', blank=True, null=True) # Mejor que Base64
     fecha_registro = models.DateTimeField(auto_now_add=True)
     fecha_registro = models.DateField(auto_now_add=True, null=True, blank=True)
-    activo = models.BooleanField(default=True) 
+    activo = models.BooleanField(default=True)
+    inactive_status = models.CharField(max_length=20, choices=INACTIVE_CHOICES, blank=True, null=True)
+    inactive_reason = models.TextField(blank=True, null=True)
+    inactive_since = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return self.nombre

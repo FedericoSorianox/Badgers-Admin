@@ -17,10 +17,11 @@ const SOCIOS_SIN_PAGO = [
 const COLORS = ['#4CAF50', '#FFC107'];
 
 const DashboardPage = () => {
-         const [stats, setStats] = useState({ 
+    const [stats, setStats] = useState({ 
         socios_activos: 0, 
         productos_en_inventario: 0,
-        pagos_mes: { pagados: 0, pendientes: 0 }
+        pagos_mes: { pagados: 0, pendientes: 0 },
+        socios_inactivos: { total: 0 }
     });
     const [stockData, setStockData] = useState([]);
     const [pagosData, setPagosData] = useState([]);
@@ -37,7 +38,11 @@ const DashboardPage = () => {
                     apiClient.get('/pagos/?limit=10000')
                 ]);
                 const todosLosSocios = sociosRes.data.results ? sociosRes.data.results : sociosRes.data;
-                const sociosActivos = todosLosSocios.filter(socio => !SOCIOS_SIN_PAGO.includes(socio.nombre));
+                const sociosActivos = todosLosSocios.filter(socio => 
+                    !SOCIOS_SIN_PAGO.includes(socio.nombre) && socio.activo
+                );
+                const sociosInactivos = todosLosSocios.filter(socio => !socio.activo);
+                
                 const now = new Date();
                 const mesActual = now.getMonth() + 1;
                 const añoActual = now.getFullYear();
@@ -46,7 +51,7 @@ const DashboardPage = () => {
                     p.mes === mesActual && p.año === añoActual
                 );
                 const sociosPagados = pagosMesActual.map(p => p.socio);
-                const sociosPendientesList = sociosActivos.filter(s => !sociosPagados.includes(s.ci));
+                const sociosPendientesList = sociosActivos.filter(s => !sociosPagados.includes(s.ci) && s.activo);
                 setSociosPendientes(sociosPendientesList);
                 setStats({
                     ...statsRes.data,
@@ -54,6 +59,9 @@ const DashboardPage = () => {
                     pagos_mes: {
                         pagados: sociosPagados.length,
                         pendientes: sociosPendientesList.length
+                    },
+                    socios_inactivos: {
+                        total: sociosInactivos.length
                     }
                 });
                 setPagosData([
@@ -71,7 +79,7 @@ const DashboardPage = () => {
         };
         fetchData();
     }, []);
-//console.log("Datos de socios pendientes:", sociosPendientes); // <--- AÑADE ESTA LÍNEA
+
     return (
         <Container fluid className="px-0">
             <Row className="justify-content-center">
@@ -97,35 +105,50 @@ const DashboardPage = () => {
                         <Col xs={12} md={6} lg={3} className="d-flex align-items-stretch">
                             <Card className="shadow border-0 w-100 bg-white text-center p-3">
                                 <div className="d-flex flex-column align-items-center justify-content-center h-100">
-                                    <span className="icon icon-lg bg-success text-white rounded-circle d-flex align-items-center justify-content-center mb-3" style={{ width: 56, height: 56, fontSize: 32 }}>
-                                        <BoxSeam size={32} />
+                                    <span className="icon icon-lg bg-danger text-white rounded-circle d-flex align-items-center justify-content-center mb-3" style={{ width: 56, height: 56, fontSize: 32 }}>
+                                        <PeopleFill size={32} />
                                     </span>
-                                    <Card.Title as="h6" className="mb-2 text-uppercase text-muted small">Productos en Inventario</Card.Title>
-                                    <h2 className="text-success fw-bolder mb-1" style={{ fontSize: '2.5rem' }}>{stats.productos_en_inventario}</h2>
+                                    <Card.Title as="h6" className="mb-2 text-uppercase text-muted small">Socios Inactivos</Card.Title>
+                                    <h2 className="text-danger fw-bolder mb-1" style={{ fontSize: '2.5rem' }}>{stats.socios_inactivos.total}</h2>
+                                    <Card.Text className="text-muted small mb-0">
+                                        (Vacaciones o ausencia temporal)
+                                    </Card.Text>
                                 </div>
                             </Card>
                         </Col>
                         <Col xs={12} md={6} lg={3} className="d-flex align-items-stretch">
                             <Card className="shadow border-0 w-100 bg-white text-center p-3">
                                 <div className="d-flex flex-column align-items-center justify-content-center h-100">
+                                    <span className="icon icon-lg bg-success text-white rounded-circle d-flex align-items-center justify-content-center mb-3" style={{ width: 56, height: 56, fontSize: 32 }}>
+                                        <BoxSeam size={32} />
+                                    </span>
+                                    <Card.Title as="h6" className="mb-2 text-uppercase text-muted small">Productos en Inventario</Card.Title>
+                                    <h2 className="text-success fw-bolder mb-1" style={{ fontSize: '2.5rem' }}>{stockData.length}</h2>
+                                    <Card.Text className="text-muted small mb-0">
+                                        (Con stock disponible)
+                                    </Card.Text>
+                                </div>
+                            </Card>
+                        </Col>
+                        <Col xs={12} md={6} lg={3} className="d-flex align-items-stretch">
+                            <Card className="shadow border-0 w-100 bg-white text-center p-3" style={{ cursor: 'pointer' }} onClick={() => setShowModal(true)}>
+                                <div className="d-flex flex-column align-items-center justify-content-center h-100">
                                     <span className="icon icon-lg bg-warning text-white rounded-circle d-flex align-items-center justify-content-center mb-3" style={{ width: 56, height: 56, fontSize: 32 }}>
                                         <CreditCard2FrontFill size={32} />
                                     </span>
                                     <Card.Title as="h6" className="mb-2 text-uppercase text-muted small">Estado de Pagos</Card.Title>
-                                    <div className="d-flex justify-content-center gap-4 w-100 mb-1">
-                                        <div>
-                                            <h3 className="text-success fw-bold mb-0" style={{ fontSize: '2rem' }}>{stats.pagos_mes.pagados}</h3>
-                                            <div className="text-muted small">Pagados</div>
-                                        </div>
-                                        <div style={{ cursor: 'pointer' }} onClick={() => setShowModal(true)}>
-                                            <h3 className="text-warning fw-bold mb-0" style={{ fontSize: '2rem' }}>{stats.pagos_mes.pendientes}</h3>
-                                            <div className="text-muted small">Pendientes</div>
-                                        </div>
+                                    <div className="d-flex align-items-center gap-3">
+                                        <h2 className="text-success fw-bolder mb-1" style={{ fontSize: '2.5rem' }}>{stats.pagos_mes.pagados}</h2>
+                                        <h2 className="text-warning fw-bolder mb-1" style={{ fontSize: '2.5rem' }}>{stats.pagos_mes.pendientes}</h2>
                                     </div>
+                                    <Card.Text className="text-muted small mb-0">
+                                        Pagados / Pendientes
+                                    </Card.Text>
                                 </div>
                             </Card>
                         </Col>
                     </Row>
+
                     <Row className="mb-5 g-4">
                         <Col xs={12} md={6} className="d-flex align-items-stretch">
                             <Card className="shadow border-0 w-100 bg-white p-3">
@@ -156,46 +179,43 @@ const DashboardPage = () => {
                             <Card className="shadow border-0 w-100 bg-white p-3">
                                 <Card.Title as="h4" className="mb-4 text-center text-primary">Stock de Productos</Card.Title>
                                 <ResponsiveContainer width="100%" height={320}>
-                                    <BarChart data={stockData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                                        <XAxis dataKey="nombre" />
-                                        <YAxis />
+                                    <BarChart data={stockData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis type="number" />
+                                        <YAxis dataKey="nombre" type="category" width={150} />
                                         <Tooltip />
-                                        <Legend />
-                                        <Bar dataKey="stock" fill="#2196F3" radius={[6, 6, 0, 0]} />
+                                        <Bar dataKey="stock" fill="#4CAF50" />
                                     </BarChart>
                                 </ResponsiveContainer>
                             </Card>
                         </Col>
                     </Row>
+
                     <Modal show={showModal} onHide={() => setShowModal(false)} centered size="md">
-                     
                         <Modal.Header closeButton>
                             <Modal.Title>Socios Pendientes de Pago</Modal.Title>
                         </Modal.Header>
                         <Modal.Body>
                             <ListGroup variant="flush">
                                 {sociosPendientes.map((socio) => (
-                                  //  console.log("Renderizando socio:", socio), // <--- Y AÑADE ESTA OTRA LÍNEA
                                     <ListGroup.Item key={socio.ci} className="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <div className="fw-bold">{socio.nombre}</div>                                            
-                                            <div className="text-muted small">CI: {socio.ci}</div>
+                                            <h6 className="mb-0">{socio.nombre}</h6>
                                         </div>
-                                        {socio.celular && (
-                                            <Button
-                                                variant="success"
-                                                size="sm"
-                                                className="d-flex align-items-center"
-                                                onClick={() => {
-                                                    const message = `Hola ${socio.nombre}! Te recordamos que tienes pendiente el pago de la cuota mensual de The Badgers. Por favor, acércate al gimnasio para regularizar tu situación. ¡Gracias!`;
-                                                    const whatsappUrl = `https://wa.me/${socio.celular.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
-                                                    window.open(whatsappUrl, '_blank');
-                                                }}
-                                            >
-                                                <Whatsapp className="me-2" /> Enviar Recordatorio
+                                        <div>
+                                            <Button variant="outline-primary" size="sm" className="me-2">
+                                                Registrar Pago
                                             </Button>
-                                        )}
+                                            {socio.celular && (
+                                                <Button 
+                                                    variant="outline-success" 
+                                                    size="sm"
+                                                    onClick={() => window.open(`https://wa.me/${socio.celular.replace(/\D/g, '')}`)}
+                                                >
+                                                    <Whatsapp />
+                                                </Button>
+                                            )}
+                                        </div>
                                     </ListGroup.Item>
                                 ))}
                             </ListGroup>
