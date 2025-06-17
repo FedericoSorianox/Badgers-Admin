@@ -18,8 +18,7 @@ class SocioSerializer(serializers.ModelSerializer):
             'ci', 'nombre', 'celular', 'foto', 'fecha_nacimiento', 
             'tipo_cuota', 'contacto_emergencia', 'emergencia_movil', 
             'enfermedades', 'comentarios', 'fecha_registro', 'activo',
-            'inactive_status', 'inactive_reason', 'inactive_since',
-            'en_vacaciones'
+            'inactive_status', 'inactive_reason', 'inactive_since'
         ]
         # Solo 'fecha_registro' es read_only
         read_only_fields = ['fecha_registro']
