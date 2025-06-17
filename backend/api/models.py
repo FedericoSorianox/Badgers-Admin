@@ -24,6 +24,7 @@ class Socio(models.Model):
     inactive_status = models.CharField(max_length=20, choices=INACTIVE_CHOICES, blank=True, null=True)
     inactive_reason = models.TextField(blank=True, null=True)
     inactive_since = models.DateField(blank=True, null=True)
+    en_vacaciones = models.BooleanField(default=False)
 
     def __str__(self):
         return self.nombre
