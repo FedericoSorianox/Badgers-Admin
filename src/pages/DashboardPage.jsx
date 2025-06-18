@@ -28,15 +28,39 @@ const DashboardPage = () => {
     const [sociosPendientes, setSociosPendientes] = useState([]);
     const [showModal, setShowModal] = useState(false);
 
+    const fetchAllProducts = async () => {
+        try {
+            let allProducts = [];
+            let currentUrl = 'productos/';
+            
+            do {
+                const response = await apiClient.get(currentUrl);
+                if (response.data.results) {
+                    allProducts = [...allProducts, ...response.data.results];
+                }
+                currentUrl = response.data.next ? 
+                    response.data.next.split('/api/')[1] : null;
+            } while (currentUrl);
+            
+            return allProducts;
+        } catch (error) {
+            console.error("Error fetching all products:", error);
+            return [];
+        }
+    };
+
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [statsRes, productosRes, sociosRes, pagosRes] = await Promise.all([
+                const [statsRes, sociosRes, pagosRes] = await Promise.all([
                     apiClient.get('/dashboard-stats/'),
-                    apiClient.get('/productos/'),
                     apiClient.get('/socios/?limit=1000'),
                     apiClient.get('/pagos/?limit=10000')
                 ]);
+
+                // Fetch all products with pagination
+                const productos = await fetchAllProducts();
+                
                 const todosLosSocios = sociosRes.data.results ? sociosRes.data.results : sociosRes.data;
                 const sociosActivos = todosLosSocios.filter(socio => 
                     !SOCIOS_SIN_PAGO.includes(socio.nombre) && socio.activo
@@ -53,9 +77,13 @@ const DashboardPage = () => {
                 const sociosPagados = pagosMesActual.map(p => p.socio);
                 const sociosPendientesList = sociosActivos.filter(s => !sociosPagados.includes(s.ci) && s.activo);
                 setSociosPendientes(sociosPendientesList);
+
+                // Actualizar stats con el conteo correcto de productos
+                const productosConStock = productos.filter(p => p.stock > 0);
                 setStats({
                     ...statsRes.data,
                     socios_activos: sociosActivos.length,
+                    productos_en_inventario: productosConStock.length,
                     pagos_mes: {
                         pagados: sociosPagados.length,
                         pendientes: sociosPendientesList.length
@@ -64,14 +92,20 @@ const DashboardPage = () => {
                         total: sociosInactivos.length
                     }
                 });
+
                 setPagosData([
                     { name: 'Pagados', value: sociosPagados.length },
                     { name: 'Pendientes', value: sociosPendientesList.length }
                 ]);
-                const productos = productosRes.data.results ? productosRes.data.results : productosRes.data;
-                const stock = productos
-                    .filter(p => p.stock > 0)
-                    .map(p => ({ nombre: p.nombre, stock: p.stock }));
+
+                // Actualizar datos de stock
+                const stock = productosConStock
+                    .map(p => ({ 
+                        nombre: p.nombre, 
+                        stock: parseInt(p.stock) 
+                    }))
+                    .sort((a, b) => b.stock - a.stock); // Ordenar por stock descendente
+                console.log('Datos de stock procesados:', stock);
                 setStockData(stock);
             } catch (error) {
                 console.error("Error al cargar el dashboard:", error);
@@ -178,15 +212,33 @@ const DashboardPage = () => {
                         <Col xs={12} md={6} className="d-flex align-items-stretch">
                             <Card className="shadow border-0 w-100 bg-white p-3">
                                 <Card.Title as="h4" className="mb-4 text-center text-primary">Stock de Productos</Card.Title>
-                                <ResponsiveContainer width="100%" height={320}>
-                                    <BarChart data={stockData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                                        <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis type="number" />
-                                        <YAxis dataKey="nombre" type="category" width={150} />
-                                        <Tooltip />
-                                        <Bar dataKey="stock" fill="#4CAF50" />
-                                    </BarChart>
-                                </ResponsiveContainer>
+                                <div style={{ height: '320px', position: 'relative' }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart 
+                                            data={stockData} 
+                                            layout="vertical" 
+                                            margin={{ top: 5, right: 30, left: 150, bottom: 5 }}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis type="number" />
+                                            <YAxis 
+                                                dataKey="nombre" 
+                                                type="category" 
+                                                width={150}
+                                                tick={{ fontSize: 12 }}
+                                                interval={0}
+                                                scale="point"
+                                                padding={{ top: 10, bottom: 10 }}
+                                            />
+                                            <Tooltip />
+                                            <Bar 
+                                                dataKey="stock" 
+                                                fill="#4CAF50"
+                                                label={{ position: 'right', fontSize: 12 }}
+                                            />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
                             </Card>
                         </Col>
                     </Row>

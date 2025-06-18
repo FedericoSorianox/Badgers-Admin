@@ -301,24 +301,43 @@ const ProductListComponent = ({ onProductUpdate, onEdit }) => {
     const [showViewModal, setShowViewModal] = useState(false);
     const [selectedProductView, setSelectedProductView] = useState(null);
     
-    const fetchProducts = async () => {
+    const fetchAllProducts = async () => {
         try {
-            const response = await apiClient.get('/productos/');
-            setProducts(response.data.results || response.data);
+            let allProducts = [];
+            let currentUrl = 'productos/';
+            
+            do {
+                console.log('Fetching products from:', currentUrl);
+                const response = await apiClient.get(currentUrl);
+                console.log('Fetched products page:', response.data);
+                
+                if (response.data.results) {
+                    allProducts = [...allProducts, ...response.data.results];
+                }
+                
+                // Extract the next page path from the full URL
+                currentUrl = response.data.next ? 
+                    response.data.next.split('/api/')[1] : null;
+                
+            } while (currentUrl);
+            
+            console.log('All products fetched:', allProducts);
+            setProducts(allProducts);
         } catch (error) {
             console.error("Error fetching products:", error);
+            alert("Error al cargar los productos: " + (error.response?.data || error.message));
         }
     };
 
     useEffect(() => {
-        fetchProducts();
+        fetchAllProducts();
     }, []);
 
     const handleDelete = async (id) => {
         if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
             try {
                 await apiClient.delete(`/productos/${id}/`);
-                fetchProducts();
+                fetchAllProducts();
             } catch (error) {
                 console.error("Error deleting product:", error);
                 alert("Error al eliminar el producto");
@@ -328,6 +347,7 @@ const ProductListComponent = ({ onProductUpdate, onEdit }) => {
 
     const handleSave = async (formData, file, id) => {
         try {
+            console.log('Saving product with formData:', formData);
             let response;
             
             if (id) {
@@ -339,15 +359,20 @@ const ProductListComponent = ({ onProductUpdate, onEdit }) => {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
             }
-
+            
+            console.log('Save product response:', response);
             setShowForm(false);
-            fetchProducts();
+            await fetchAllProducts();
+            
         } catch (error) {
             console.error("Error saving product:", error);
             if (error.response && error.response.data) {
-                alert("Error al guardar el producto: " + JSON.stringify(error.response.data));
+                const errorMessage = typeof error.response.data === 'object' 
+                    ? JSON.stringify(error.response.data) 
+                    : error.response.data;
+                alert("Error al guardar el producto: " + errorMessage);
             } else {
-                alert("Error al guardar el producto");
+                alert("Error al guardar el producto: " + error.message);
             }
         }
     };
@@ -465,6 +490,32 @@ const VentaFormComponent = ({ productos, onVentaSuccess, ventas }) => {
         cantidad: 1,
         fecha_venta: new Date().toISOString().split('T')[0]
     });
+    const [allProducts, setAllProducts] = useState([]);
+
+    // Fetch all products including pagination
+    const fetchAllProducts = async () => {
+        try {
+            let products = [];
+            let currentUrl = 'productos/';
+            
+            do {
+                const response = await apiClient.get(currentUrl);
+                if (response.data.results) {
+                    products = [...products, ...response.data.results];
+                }
+                currentUrl = response.data.next ? 
+                    response.data.next.split('/api/')[1] : null;
+            } while (currentUrl);
+            
+            setAllProducts(products);
+        } catch (error) {
+            console.error("Error fetching all products:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchAllProducts();
+    }, []);
 
     const handleChange = (e) => setVenta({ ...venta, [e.target.name]: e.target.value });
 
@@ -483,7 +534,7 @@ const VentaFormComponent = ({ productos, onVentaSuccess, ventas }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const producto = productos.find(p => p.id === parseInt(venta.producto));
+            const producto = allProducts.find(p => p.id === parseInt(venta.producto));
             if (!producto) {
                 alert('Producto no encontrado');
                 return;
@@ -508,6 +559,7 @@ const VentaFormComponent = ({ productos, onVentaSuccess, ventas }) => {
                 fecha_venta: new Date().toISOString().split('T')[0]
             });
             onVentaSuccess();
+            fetchAllProducts(); // Refresh products list after sale
         } catch (error) {
             console.error("Error al registrar venta:", error);
             alert("Error al registrar la venta");
@@ -516,13 +568,13 @@ const VentaFormComponent = ({ productos, onVentaSuccess, ventas }) => {
 
     // --- Historial de Ventas ---
     const ventasConNombre = ventas.map(v => {
-        const prod = productos.find(p => p.id === v.producto);
+        const prod = allProducts.find(p => p.id === v.producto) || {};
         return {
             ...v,
-            nombre_producto: prod ? prod.nombre : 'Desconocido',
-            precio_venta: prod ? prod.precio_venta : 0
+            nombre_producto: prod.nombre || 'Desconocido',
+            precio_venta: prod.precio_venta || 0
         };
-    }).sort((a, b) => new Date(b.fecha_venta) - new Date(a.fecha_venta)); // Ordenar por fecha más reciente
+    }).sort((a, b) => new Date(b.fecha_venta) - new Date(a.fecha_venta));
 
     return (
         <>
@@ -540,7 +592,7 @@ const VentaFormComponent = ({ productos, onVentaSuccess, ventas }) => {
                                 required
                             >
                                 <option value="">Seleccionar producto...</option>
-                                {productos.map(producto => (
+                                {allProducts.map(producto => (
                                     <option key={producto.id} value={producto.id}>
                                         {producto.nombre} - Stock: {producto.stock}
                                     </option>
@@ -623,6 +675,31 @@ const VentaFormComponent = ({ productos, onVentaSuccess, ventas }) => {
 // --- Componente de Stock Semanal ---
 const StockSemanalComponent = ({ productos, ventas }) => {
     const [selectedWeek, setSelectedWeek] = useState(null);
+    const [allProducts, setAllProducts] = useState([]);
+    
+    const fetchAllProducts = async () => {
+        try {
+            let products = [];
+            let currentUrl = 'productos/';
+            
+            do {
+                const response = await apiClient.get(currentUrl);
+                if (response.data.results) {
+                    products = [...products, ...response.data.results];
+                }
+                currentUrl = response.data.next ? 
+                    response.data.next.split('/api/')[1] : null;
+            } while (currentUrl);
+            
+            setAllProducts(products);
+        } catch (error) {
+            console.error("Error fetching all products:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchAllProducts();
+    }, []);
     
     const getWednesdays = () => {
         const wednesdays = [];
@@ -677,9 +754,9 @@ const StockSemanalComponent = ({ productos, ventas }) => {
                     onChange={(e) => setSelectedWeek(new Date(e.target.value))}
                 >
                     <option value="">Seleccionar semana...</option>
-                        {wednesdays.map((wednesday, index) => (
+                    {wednesdays.map((wednesday, index) => (
                         <option key={index} value={wednesday.toISOString()}>
-                                Semana del {formatDate(wednesday)}
+                            Semana del {formatDate(wednesday)}
                         </option>
                     ))}
                 </Form.Select>
@@ -698,7 +775,7 @@ const StockSemanalComponent = ({ productos, ventas }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {productos.map(producto => (
+                        {allProducts.map(producto => (
                             <tr key={producto.id}>
                                 <td>{producto.nombre}</td>
                                 {weekDates.map((date, index) => {
@@ -721,7 +798,7 @@ const StockSemanalComponent = ({ productos, ventas }) => {
                     </tbody>
                 </Table>
             )}
-                        </Card>
+        </Card>
     );
 };
 
