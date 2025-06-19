@@ -119,7 +119,7 @@ $reddit:        #E84422;
 
 // Brand colors
 $brand-colors: ();
-$brand-colors: map-merge((
+$brand-colors: map.merge((
   "facebook":     $facebook,
   "twitter":      $twitter,
   "google":       $google,
@@ -138,7 +138,7 @@ $brand-colors: map-merge((
 
 // Theme colors
 $theme-colors: ();
-$theme-colors: map-merge((
+$theme-colors: map.merge((
   "primary":       $primary,
   "secondary":     $secondary,
   "tertiary":      $tertiary,
@@ -200,105 +200,105 @@ $color-contrast-dark:      $dark;
 $color-contrast-light:     $white;
 
 // fusv-disable
-$blue-100: tint-color($blue, 8);
-$blue-200: tint-color($blue, 6);
-$blue-300: tint-color($blue, 4);
-$blue-400: tint-color($blue, 2);
+$blue-100: tint-color($blue, 8%);
+$blue-200: tint-color($blue, 6%);
+$blue-300: tint-color($blue, 4%);
+$blue-400: tint-color($blue, 2%);
 $blue-500: $blue;
-$blue-600: shade-color($blue, 2);
-$blue-700: shade-color($blue, 4);
-$blue-800: shade-color($blue, 6);
-$blue-900: shade-color($blue, 8);
+$blue-600: shade-color($blue, 2%);
+$blue-700: shade-color($blue, 4%);
+$blue-800: shade-color($blue, 6%);
+$blue-900: shade-color($blue, 8%);
 
-$indigo-100: tint-color($indigo, 8);
-$indigo-200: tint-color($indigo, 6);
-$indigo-300: tint-color($indigo, 4);
-$indigo-400: tint-color($indigo, 2);
+$indigo-100: tint-color($indigo, 8%);
+$indigo-200: tint-color($indigo, 6%);
+$indigo-300: tint-color($indigo, 4%);
+$indigo-400: tint-color($indigo, 2%);
 $indigo-500: $indigo;
-$indigo-600: shade-color($indigo, 2);
-$indigo-700: shade-color($indigo, 4);
-$indigo-800: shade-color($indigo, 6);
-$indigo-900: shade-color($indigo, 8);
+$indigo-600: shade-color($indigo, 2%);
+$indigo-700: shade-color($indigo, 4%);
+$indigo-800: shade-color($indigo, 6%);
+$indigo-900: shade-color($indigo, 8%);
 
-$purple-100: tint-color($purple, 8);
-$purple-200: tint-color($purple, 6);
-$purple-300: tint-color($purple, 4);
-$purple-400: tint-color($purple, 2);
+$purple-100: tint-color($purple, 8%);
+$purple-200: tint-color($purple, 6%);
+$purple-300: tint-color($purple, 4%);
+$purple-400: tint-color($purple, 2%);
 $purple-500: $purple;
-$purple-600: shade-color($purple, 2);
-$purple-700: shade-color($purple, 4);
-$purple-800: shade-color($purple, 6);
-$purple-900: shade-color($purple, 8);
+$purple-600: shade-color($purple, 2%);
+$purple-700: shade-color($purple, 4%);
+$purple-800: shade-color($purple, 6%);
+$purple-900: shade-color($purple, 8%);
 
-$pink-100: tint-color($pink, 8);
-$pink-200: tint-color($pink, 6);
-$pink-300: tint-color($pink, 4);
-$pink-400: tint-color($pink, 2);
+$pink-100: tint-color($pink, 8%);
+$pink-200: tint-color($pink, 6%);
+$pink-300: tint-color($pink, 4%);
+$pink-400: tint-color($pink, 2%);
 $pink-500: $pink;
-$pink-600: shade-color($pink, 2);
-$pink-700: shade-color($pink, 4);
-$pink-800: shade-color($pink, 6);
-$pink-900: shade-color($pink, 8);
+$pink-600: shade-color($pink, 2%);
+$pink-700: shade-color($pink, 4%);
+$pink-800: shade-color($pink, 6%);
+$pink-900: shade-color($pink, 8%);
 
-$red-100: tint-color($red, 8);
-$red-200: tint-color($red, 6);
-$red-300: tint-color($red, 4);
-$red-400: tint-color($red, 2);
+$red-100: tint-color($red, 8%);
+$red-200: tint-color($red, 6%);
+$red-300: tint-color($red, 4%);
+$red-400: tint-color($red, 2%);
 $red-500: $red;
-$red-600: shade-color($red, 2);
-$red-700: shade-color($red, 4);
-$red-800: shade-color($red, 6);
-$red-900: shade-color($red, 8);
+$red-600: shade-color($red, 2%);
+$red-700: shade-color($red, 4%);
+$red-800: shade-color($red, 6%);
+$red-900: shade-color($red, 8%);
 
-$orange-100: tint-color($orange, 8);
-$orange-200: tint-color($orange, 6);
-$orange-300: tint-color($orange, 4);
-$orange-400: tint-color($orange, 2);
+$orange-100: tint-color($orange, 8%);
+$orange-200: tint-color($orange, 6%);
+$orange-300: tint-color($orange, 4%);
+$orange-400: tint-color($orange, 2%);
 $orange-500: $orange;
-$orange-600: shade-color($orange, 2);
-$orange-700: shade-color($orange, 4);
-$orange-800: shade-color($orange, 6);
-$orange-900: shade-color($orange, 8);
+$orange-600: shade-color($orange, 2%);
+$orange-700: shade-color($orange, 4%);
+$orange-800: shade-color($orange, 6%);
+$orange-900: shade-color($orange, 8%);
 
-$yellow-100: tint-color($yellow, 8);
-$yellow-200: tint-color($yellow, 6);
-$yellow-300: tint-color($yellow, 4);
-$yellow-400: tint-color($yellow, 2);
+$yellow-100: tint-color($yellow, 8%);
+$yellow-200: tint-color($yellow, 6%);
+$yellow-300: tint-color($yellow, 4%);
+$yellow-400: tint-color($yellow, 2%);
 $yellow-500: $yellow;
-$yellow-600: shade-color($yellow, 2);
-$yellow-700: shade-color($yellow, 4);
-$yellow-800: shade-color($yellow, 6);
-$yellow-900: shade-color($yellow, 8);
+$yellow-600: shade-color($yellow, 2%);
+$yellow-700: shade-color($yellow, 4%);
+$yellow-800: shade-color($yellow, 6%);
+$yellow-900: shade-color($yellow, 8%);
 
-$green-100: tint-color($green, 8);
-$green-200: tint-color($green, 6);
-$green-300: tint-color($green, 4);
-$green-400: tint-color($green, 2);
+$green-100: tint-color($green, 8%);
+$green-200: tint-color($green, 6%);
+$green-300: tint-color($green, 4%);
+$green-400: tint-color($green, 2%);
 $green-500: $green;
-$green-600: shade-color($green, 2);
-$green-700: shade-color($green, 4);
-$green-800: shade-color($green, 6);
-$green-900: shade-color($green, 8);
+$green-600: shade-color($green, 2%);
+$green-700: shade-color($green, 4%);
+$green-800: shade-color($green, 6%);
+$green-900: shade-color($green, 8%);
 
-$teal-100: tint-color($teal, 8);
-$teal-200: tint-color($teal, 6);
-$teal-300: tint-color($teal, 4);
-$teal-400: tint-color($teal, 2);
+$teal-100: tint-color($teal, 8%);
+$teal-200: tint-color($teal, 6%);
+$teal-300: tint-color($teal, 4%);
+$teal-400: tint-color($teal, 2%);
 $teal-500: $teal;
-$teal-600: shade-color($teal, 2);
-$teal-700: shade-color($teal, 4);
-$teal-800: shade-color($teal, 6);
-$teal-900: shade-color($teal, 8);
+$teal-600: shade-color($teal, 2%);
+$teal-700: shade-color($teal, 4%);
+$teal-800: shade-color($teal, 6%);
+$teal-900: shade-color($teal, 8%);
 
-$cyan-100: tint-color($cyan, 8);
-$cyan-200: tint-color($cyan, 6);
-$cyan-300: tint-color($cyan, 4);
-$cyan-400: tint-color($cyan, 2);
+$cyan-100: tint-color($cyan, 8%);
+$cyan-200: tint-color($cyan, 6%);
+$cyan-300: tint-color($cyan, 4%);
+$cyan-400: tint-color($cyan, 2%);
 $cyan-500: $cyan;
-$cyan-600: shade-color($cyan, 2);
-$cyan-700: shade-color($cyan, 4);
-$cyan-800: shade-color($cyan, 6);
-$cyan-900: shade-color($cyan, 8);
+$cyan-600: shade-color($cyan, 2%);
+$cyan-700: shade-color($cyan, 4%);
+$cyan-800: shade-color($cyan, 6%);
+$cyan-900: shade-color($cyan, 8%);
 // fusv-enable
 
 // Characters which are escaped by the escape-svg function
@@ -344,8 +344,8 @@ $gradient: linear-gradient(180deg, rgba($white, .15), rgba($white, 0));
 $spacer: 1rem;
 $spacers: (
   0: 0,
-1: $spacer / 4,
-  2: $spacer / 2,
+  1: math.div($spacer, 4),
+  2: math.div($spacer, 2),
   3: $spacer,
   4: $spacer * 1.5,
   5: $spacer * 3,
@@ -379,7 +379,7 @@ $body-text-align:           null;
 
 $link-color:                              $primary;
 $link-decoration:                         none;
-$link-hover-color:                        darken($link-color, 15%);
+$link-hover-color:                        color.adjust($link-color, $lightness: -15%);
 $link-hover-decoration:                   null;
 // Darken percentage for links with `.text-*` class (e.g. `.text-success`)
 $emphasized-link-hover-darken-percentage: 15%;
@@ -558,7 +558,7 @@ $h4-font-size:                $font-size-base * 1.5;
 $h5-font-size:                $font-size-base * 1.25;
 $h6-font-size:                $font-size-base;
 
-$headings-margin-bottom:      $spacer / 2;
+$headings-margin-bottom:      math.div($spacer, 2);
 $headings-font-family:        null;
 $headings-font-style:         null;
 $headings-font-weight:        $font-weight-bold;
@@ -808,7 +808,7 @@ $input-border-radius-sm:                $border-radius-sm;
 $input-border-radius-lg:                $border-radius-lg;
 
 $input-focus-bg:                        $input-bg;
-$input-focus-border-color:              lighten($component-active-bg, 25%);
+$input-focus-border-color:              color.adjust($component-active-bg, $lightness: 25%);
 $input-focus-color:                     $input-color;
 $input-focus-width:                     $input-btn-focus-width;
 $input-focus-box-shadow:                $input-btn-focus-box-shadow;
@@ -924,8 +924,8 @@ $form-switch-checked-bg-position: right center;
 
 $form-check-inline-margin-end:        1rem;
 
-$input-group-addon-color:               $input-color;
-$input-group-addon-bg:                  $white;
+$input-group-addon-color:               $input-placeholder-color;
+$input-group-addon-bg:                  $input-bg;
 $input-group-addon-border-color:        $input-border-color;
 
 // Input groups
@@ -994,7 +994,7 @@ $form-range-thumb-border-radius:           1rem;
 $form-range-thumb-box-shadow:              0 .1rem .25rem rgba($black, .1);
 $form-range-thumb-focus-box-shadow:        0 0 0 1px $body-bg, $input-focus-box-shadow;
 $form-range-thumb-focus-box-shadow-width:  $input-focus-width; // For focus box shadow issue in Edge
-$form-range-thumb-active-bg:               lighten($component-active-bg, 35%);
+$form-range-thumb-active-bg:               color.adjust($component-active-bg, $lightness: 35%);
 $form-range-thumb-disabled-bg:             $gray-500;
 $form-range-thumb-transition:              background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
 
@@ -1117,7 +1117,7 @@ $nav-pills-border-radius:           $border-radius;
 
 $nav-pills-link-hover-color:        $primary;
 $nav-pills-link-active-color:       $primary;
-$nav-pills-active-border-color:     lighten( $dark, 20% );
+$nav-pills-active-border-color:     color.adjust($dark, $lightness: 20%);
 $nav-pills-link-active-bg:          #f8f8f8;
 
 // Owl navs
@@ -1202,11 +1202,11 @@ $dropdown-border-radius:            $border-radius;
 $dropdown-border-width:             $border-width;
 $dropdown-inner-border-radius:      subtract($dropdown-border-radius, $dropdown-border-width);
 $dropdown-divider-bg:               $gray-200;
-$dropdown-divider-margin-y:         $spacer / 2;
+$dropdown-divider-margin-y:         math.div($spacer, 2);
 $dropdown-box-shadow:               $box-shadow;
 
 $dropdown-link-color:               $gray-900;
-$dropdown-link-hover-color:         darken($gray-900, 5%);
+$dropdown-link-hover-color:         color.adjust($gray-900, $lightness: -5%);
 $dropdown-link-hover-bg:            $gray-200;
 
 $dropdown-link-active-color:        $gray-900;
@@ -1214,7 +1214,7 @@ $dropdown-link-active-bg:           $gray-400;
 
 $dropdown-link-disabled-color:      $gray-600;
 
-$dropdown-item-padding-y:           $spacer / 4;
+$dropdown-item-padding-y:           math.div($spacer, 4);
 $dropdown-item-padding-x:           $spacer;
 
 $dropdown-header-color:             $gray-900;
@@ -1485,7 +1485,7 @@ $list-group-border-radius:          $border-radius;
 $list-group-sm-item-padding-y:      .625rem;
 $list-group-sm-item-padding-x:      .875rem;
 
-$list-group-item-padding-y:         $spacer / 2;
+$list-group-item-padding-y:         math.div($spacer, 2);
 $list-group-item-padding-x:         $spacer;
 $list-group-item-bg-level:          -9;
 $list-group-item-color-level:       6;
@@ -1524,7 +1524,7 @@ $figure-caption-color:              $gray-600;
 // Breadcrumbs
 
 $breadcrumb-font-size:              null;
-$breadcrumb-padding-y:              $spacer / 2;
+$breadcrumb-padding-y:              math.div($spacer, 2);
 $breadcrumb-padding-x:              $spacer;
 $breadcrumb-item-padding-x:         .5rem;
 $breadcrumb-margin-bottom:          1rem;

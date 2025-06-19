@@ -1,0 +1,27 @@
+// Sass Configuration File
+// This file contains modern Sass configurations and imports
+
+// Import Sass modules for modern functions
+@use "sass:math";
+@use "sass:color";
+@use "sass:map";
+@use "sass:meta";
+
+// Import Bootstrap functions and mixins (keeping @import for compatibility)
+@import "../../node_modules/bootstrap/scss/functions";
+@import "../../node_modules/bootstrap/scss/mixins";
+
+// Import our custom variables
+@import "volt/variables";
+
+// Import Bootstrap core
+@import "../../node_modules/bootstrap/scss/bootstrap";
+
+// Import our custom components
+@import "volt/vendor";
+@import "volt/mixins";
+@import "volt/functions";
+@import "volt/reboot";
+@import "volt/utilities";
+@import "volt/layout";
+@import "volt/components"; 

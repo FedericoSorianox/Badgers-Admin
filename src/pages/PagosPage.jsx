@@ -1,5 +1,6 @@
 // src/pages/PagosPage.jsx
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import apiClient from '../api';
 import { 
     Card, Row, Col, Container, Button, Form, Table,
@@ -170,10 +171,16 @@ const InfoDialog = ({ show, onHide, onConfirm, socio, mes, año, isSocioSinPago 
 };
 
 const PagosPage = () => {
+    const location = useLocation();
     const [socios, setSocios] = useState([]);
     const [pagos, setPagos] = useState([]);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-    const [newPago, setNewPago] = useState({ socio: '', mes: new Date().getMonth() + 1, año: selectedYear, monto: 2000.0 });
+    const [newPago, setNewPago] = useState({ 
+        socio: location.state?.selectedSocioId || '', 
+        mes: new Date().getMonth() + 1, 
+        año: selectedYear, 
+        monto: 2000.0 
+    });
     const [confirmDialog, setConfirmDialog] = useState({ show: false, socio: null, mes: null });
     const [infoDialog, setInfoDialog] = useState({ show: false, socio: null, mes: null });
 
@@ -201,6 +208,16 @@ const PagosPage = () => {
     useEffect(() => {
         fetchSociosAndPagos();
     }, [selectedYear]);
+
+    useEffect(() => {
+        if (location.state?.selectedSocioId) {
+            setConfirmDialog({ 
+                show: true, 
+                socio: socios.find(s => s.ci === location.state.selectedSocioId),
+                mes: new Date().getMonth() + 1
+            });
+        }
+    }, [socios, location.state]);
 
     const handleNewPagoChange = (e) => {
         const { name, value } = e.target;

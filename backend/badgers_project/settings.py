@@ -133,6 +133,17 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'static'
+
+# Media files (Uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Ensure media directory exists
+if not os.path.exists(MEDIA_ROOT):
+    os.makedirs(MEDIA_ROOT)
+if not os.path.exists(MEDIA_ROOT / 'productos_fotos'):
+    os.makedirs(MEDIA_ROOT / 'productos_fotos')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -151,19 +162,30 @@ REST_FRAMEWORK = {
 # Configuración de CORS
 CORS_ALLOWED_ORIGINS = [
     "https://thebadgersadmin.netlify.app",
-    "http://localhost:5173", # La dirección de tu frontend de React (Vite)
+    "http://localhost:5173",  # La dirección de tu frontend de React (Vite)
     "http://127.0.0.1:5173",
     "https://badgersadmin.netlify.app",
 ]
 
 CORS_ALLOW_ALL_HEADERS = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
 # Configuración de Medios (para las fotos)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Configuración adicional para servir archivos de medios
+FILE_UPLOAD_PERMISSIONS = 0o644
+FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
 
 from datetime import timedelta
 

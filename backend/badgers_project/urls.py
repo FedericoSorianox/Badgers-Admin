@@ -10,7 +10,11 @@ urlpatterns = [
     path('api/', include('api.urls')), # Conecta nuestra API
 ]
 
-# Para servir archivos de medios en desarrollo
+# Servir archivos de medios siempre (desarrollo y producción)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Servir archivos estáticos en desarrollo
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     

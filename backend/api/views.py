@@ -2,18 +2,20 @@
 import csv
 import io
 from rest_framework import viewsets, status
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import viewsets, status, filters 
 from rest_framework.views import APIView
 from .models import Socio, Pago, Producto, Venta, Gasto
 from .serializers import SocioSerializer, PagoSerializer, ProductoSerializer, VentaSerializer, GastoSerializer
 from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+from django.db.models import Q
+from datetime import datetime
 
 # Función de ayuda para procesar fechas de forma robusta
 def parse_date_from_csv(date_str):
-    from datetime import datetime
     if not date_str:
         return None
     for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y'):
@@ -141,6 +143,7 @@ class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all().order_by('nombre')
     serializer_class = ProductoSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = None  # Desactivamos la paginación
     
     @action(detail=False, methods=['post'], parser_classes=[MultiPartParser])
     def import_csv(self, request, *args, **kwargs):
@@ -212,11 +215,13 @@ class GastoViewSet(viewsets.ModelViewSet):
 class DashboardStatsView(APIView):
     def get(self, request, *args, **kwargs):
         active_socios_count = Socio.objects.filter(activo=True).count()
-        products_in_inventory_count = Producto.objects.count()
+        products_in_inventory = Producto.objects.filter(stock__gt=0)
+        products_in_inventory_count = products_in_inventory.count()
 
         stats = {
             'socios_activos': active_socios_count,
             'productos_en_inventario': products_in_inventory_count,
+            'productos': ProductoSerializer(products_in_inventory, many=True).data
         }
         return Response(stats)
 

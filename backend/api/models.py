@@ -41,12 +41,20 @@ class Pago(models.Model):
     class Meta:
         unique_together = ('socio', 'mes', 'año')
 
+def producto_foto_path(instance, filename):
+    # Obtener la extensión del archivo
+    ext = filename.split('.')[-1]
+    # Generar el nuevo nombre del archivo usando el nombre del producto
+    filename = f"{instance.nombre.lower().replace(' ', '_')}.{ext}"
+    # Retornar la ruta completa
+    return f'productos_fotos/{filename}'
+
 class Producto(models.Model):
     nombre = models.CharField(max_length=255, unique=True)
     precio_venta = models.DecimalField(max_digits=10, decimal_places=2)
     precio_costo = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     stock = models.IntegerField(default=0)
-    foto = models.ImageField(upload_to='productos_fotos/', blank=True, null=True)
+    foto = models.ImageField(upload_to=producto_foto_path, blank=True, null=True)
     
     @property
     def ganancia(self):

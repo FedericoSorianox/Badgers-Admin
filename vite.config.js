@@ -9,4 +9,17 @@ export default defineConfig({
       '/api': 'http://localhost:8000',
     },
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        // Suppress deprecation warnings
+        quietDeps: true,
+        // Use modern Sass features
+        sassOptions: {
+          outputStyle: 'compressed',
+          includePaths: ['node_modules'],
+        },
+      },
+    },
+  },
 })

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import apiClient from '../api';
+import apiClient, { getBaseUrl } from '../api';
 import {
     Card, Row, Col, Container, Button, Form, Table,
     Modal, ListGroup, FormGroup, FormLabel, FormControl,
@@ -9,8 +9,35 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
     faPlus, faEdit, faTrash, faArrowUp, 
     faArrowDown, faTimes, faMoneyBill,
-    faImage
+    faImage, faExclamationTriangle
 } from '@fortawesome/free-solid-svg-icons';
+
+// Función para construir la URL completa de las imágenes
+const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    
+    // Si la imagen ya tiene una URL completa, la devolvemos tal como está
+    if (imagePath.startsWith('http')) {
+        return imagePath;
+    }
+    
+    try {
+        // Aseguramos que la ruta comience con /media
+        let cleanPath = imagePath;
+        if (!cleanPath.startsWith('/media/')) {
+            cleanPath = `/media/${cleanPath}`;
+        }
+        
+        // Construimos la URL completa usando la función getBaseUrl
+        const baseUrl = getBaseUrl().replace(/\/$/, '');
+        const fullUrl = `${baseUrl}${cleanPath}`;
+        
+        return fullUrl;
+    } catch (error) {
+        console.error('Error constructing image URL:', error);
+        return null;
+    }
+};
 
 // --- Componente de Formulario para Productos (con fotos y modo vista) ---
 const ProductForm = ({ show, onHide, onSave, product, isViewOnly = false }) => {
@@ -55,7 +82,7 @@ const ProductForm = ({ show, onHide, onSave, product, isViewOnly = false }) => {
                 {product && product.foto && (
                     <div className="text-center mb-3">
                         <img 
-                            src={product.foto} 
+                            src={getImageUrl(product.foto)} 
                             alt={formData.nombre}
                             className="img-fluid rounded"
                             style={{ maxHeight: '200px' }}
@@ -197,7 +224,7 @@ const ProductDetailPanel = ({ product, show, onHide, onEdit, onDelete }) => {
             <Modal.Body>
                 <div className="text-center mb-4">
                     <img 
-                            src={product.foto} 
+                            src={getImageUrl(product.foto)} 
                         alt={product.nombre}
                         className="img-fluid rounded"
                         style={{ maxHeight: '200px' }}
@@ -293,51 +320,18 @@ const ProductDetailPanel = ({ product, show, onHide, onEdit, onDelete }) => {
 };
 
 // --- Componente de Lista de Productos ---
-const ProductListComponent = ({ onProductUpdate, onEdit }) => {
-    const [products, setProducts] = useState([]);
+const ProductListComponent = ({ products, onProductUpdate, onEdit }) => {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showForm, setShowForm] = useState(false);
     const [showDetail, setShowDetail] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
     const [selectedProductView, setSelectedProductView] = useState(null);
-    
-    const fetchAllProducts = async () => {
-        try {
-            let allProducts = [];
-            let currentUrl = 'productos/';
-            
-            do {
-                console.log('Fetching products from:', currentUrl);
-                const response = await apiClient.get(currentUrl);
-                console.log('Fetched products page:', response.data);
-                
-                if (response.data.results) {
-                    allProducts = [...allProducts, ...response.data.results];
-                }
-                
-                // Extract the next page path from the full URL
-                currentUrl = response.data.next ? 
-                    response.data.next.split('/api/')[1] : null;
-                
-            } while (currentUrl);
-            
-            console.log('All products fetched:', allProducts);
-            setProducts(allProducts);
-        } catch (error) {
-            console.error("Error fetching products:", error);
-            alert("Error al cargar los productos: " + (error.response?.data || error.message));
-        }
-    };
-
-    useEffect(() => {
-        fetchAllProducts();
-    }, []);
 
     const handleDelete = async (id) => {
         if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
             try {
                 await apiClient.delete(`/productos/${id}/`);
-                fetchAllProducts();
+                onProductUpdate();
             } catch (error) {
                 console.error("Error deleting product:", error);
                 alert("Error al eliminar el producto");
@@ -362,7 +356,7 @@ const ProductListComponent = ({ onProductUpdate, onEdit }) => {
             
             console.log('Save product response:', response);
             setShowForm(false);
-            await fetchAllProducts();
+            onProductUpdate();
             
         } catch (error) {
             console.error("Error saving product:", error);
@@ -411,7 +405,7 @@ const ProductListComponent = ({ onProductUpdate, onEdit }) => {
                             <td>
                                 {product.foto ? (
                                     <img 
-                                        src={product.foto} 
+                                        src={getImageUrl(product.foto)} 
                                         alt={product.nombre}
                                         className="rounded"
                                         style={{ width: '50px', height: '50px', objectFit: 'cover' }}
@@ -490,32 +484,6 @@ const VentaFormComponent = ({ productos, onVentaSuccess, ventas }) => {
         cantidad: 1,
         fecha_venta: new Date().toISOString().split('T')[0]
     });
-    const [allProducts, setAllProducts] = useState([]);
-
-    // Fetch all products including pagination
-    const fetchAllProducts = async () => {
-        try {
-            let products = [];
-            let currentUrl = 'productos/';
-            
-            do {
-                const response = await apiClient.get(currentUrl);
-                if (response.data.results) {
-                    products = [...products, ...response.data.results];
-                }
-                currentUrl = response.data.next ? 
-                    response.data.next.split('/api/')[1] : null;
-            } while (currentUrl);
-            
-            setAllProducts(products);
-        } catch (error) {
-            console.error("Error fetching all products:", error);
-        }
-    };
-
-    useEffect(() => {
-        fetchAllProducts();
-    }, []);
 
     const handleChange = (e) => setVenta({ ...venta, [e.target.name]: e.target.value });
 
@@ -534,7 +502,7 @@ const VentaFormComponent = ({ productos, onVentaSuccess, ventas }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const producto = allProducts.find(p => p.id === parseInt(venta.producto));
+            const producto = productos.find(p => p.id === parseInt(venta.producto));
             if (!producto) {
                 alert('Producto no encontrado');
                 return;
@@ -559,7 +527,6 @@ const VentaFormComponent = ({ productos, onVentaSuccess, ventas }) => {
                 fecha_venta: new Date().toISOString().split('T')[0]
             });
             onVentaSuccess();
-            fetchAllProducts(); // Refresh products list after sale
         } catch (error) {
             console.error("Error al registrar venta:", error);
             alert("Error al registrar la venta");
@@ -568,11 +535,31 @@ const VentaFormComponent = ({ productos, onVentaSuccess, ventas }) => {
 
     // --- Historial de Ventas ---
     const ventasConNombre = ventas.map(v => {
-        const prod = allProducts.find(p => p.id === v.producto) || {};
+        // Si el producto es null (fue eliminado), mostrar información especial
+        if (v.producto === null) {
+            return {
+                ...v,
+                nombre_producto: 'Producto Eliminado',
+                precio_venta: v.total_venta / v.cantidad, // Calcular precio unitario
+                producto_eliminado: true
+            };
+        }
+        
+        const prod = productos.find(p => p.id === v.producto);
+        if (!prod) {
+            return {
+                ...v,
+                nombre_producto: 'Producto No Encontrado',
+                precio_venta: v.total_venta / v.cantidad, // Calcular precio unitario
+                producto_eliminado: true
+            };
+        }
+        
         return {
             ...v,
-            nombre_producto: prod.nombre || 'Desconocido',
-            precio_venta: prod.precio_venta || 0
+            nombre_producto: prod.nombre,
+            precio_venta: prod.precio_venta || 0,
+            producto_eliminado: false
         };
     }).sort((a, b) => new Date(b.fecha_venta) - new Date(a.fecha_venta));
 
@@ -592,7 +579,7 @@ const VentaFormComponent = ({ productos, onVentaSuccess, ventas }) => {
                                 required
                             >
                                 <option value="">Seleccionar producto...</option>
-                                {allProducts.map(producto => (
+                                {productos.map(producto => (
                                     <option key={producto.id} value={producto.id}>
                                         {producto.nombre} - Stock: {producto.stock}
                                     </option>
@@ -649,8 +636,19 @@ const VentaFormComponent = ({ productos, onVentaSuccess, ventas }) => {
                     {ventasConNombre.length === 0 ? (
                         <tr><td colSpan="5" className="text-center">No hay ventas registradas.</td></tr>
                     ) : ventasConNombre.map((venta) => (
-                        <tr key={venta.id}>
-                            <td>{venta.nombre_producto}</td>
+                        <tr key={venta.id} className={venta.producto_eliminado ? 'table-secondary' : ''}>
+                            <td>
+                                <span className={venta.producto_eliminado ? 'text-muted fst-italic' : ''}>
+                                    {venta.producto_eliminado && (
+                                        <FontAwesomeIcon 
+                                            icon={faExclamationTriangle} 
+                                            className="text-warning me-2" 
+                                            title="Producto eliminado"
+                                        />
+                                    )}
+                                    {venta.nombre_producto}
+                                </span>
+                            </td>
                             <td>{venta.cantidad}</td>
                             <td>${venta.total_venta}</td>
                             <td>{new Date(venta.fecha_venta).toLocaleDateString()}</td>
@@ -675,31 +673,8 @@ const VentaFormComponent = ({ productos, onVentaSuccess, ventas }) => {
 // --- Componente de Stock Semanal ---
 const StockSemanalComponent = ({ productos, ventas }) => {
     const [selectedWeek, setSelectedWeek] = useState(null);
-    const [allProducts, setAllProducts] = useState([]);
-    
-    const fetchAllProducts = async () => {
-        try {
-            let products = [];
-            let currentUrl = 'productos/';
-            
-            do {
-                const response = await apiClient.get(currentUrl);
-                if (response.data.results) {
-                    products = [...products, ...response.data.results];
-                }
-                currentUrl = response.data.next ? 
-                    response.data.next.split('/api/')[1] : null;
-            } while (currentUrl);
-            
-            setAllProducts(products);
-        } catch (error) {
-            console.error("Error fetching all products:", error);
-        }
-    };
-
-    useEffect(() => {
-        fetchAllProducts();
-    }, []);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     
     const getWednesdays = () => {
         const wednesdays = [];
@@ -709,13 +684,14 @@ const StockSemanalComponent = ({ productos, ventas }) => {
         for (let month = 0; month < 12; month++) {
             for (let day = 1; day <= 31; day++) {
                 const date = new Date(currentYear, month, day);
+                if (date > today) break; // No incluir fechas futuras
                 if (date.getDay() === 3) { // 3 es miércoles
                     wednesdays.push(new Date(date));
                 }
             }
         }
         
-        return wednesdays;
+        return wednesdays.sort((a, b) => b - a); // Ordenar de más reciente a más antiguo
     };
     
     const getWeekDates = (wednesdayDate) => {
@@ -740,8 +716,49 @@ const StockSemanalComponent = ({ productos, ventas }) => {
         });
     };
 
+    // Función para comparar fechas ignorando la hora
+    const isSameDay = (date1, date2) => {
+        return date1.getFullYear() === date2.getFullYear() &&
+               date1.getMonth() === date2.getMonth() &&
+               date1.getDate() === date2.getDate();
+    };
+
     const wednesdays = getWednesdays();
     const weekDates = selectedWeek ? getWeekDates(selectedWeek) : [];
+
+    // Calcular el stock para cada día
+    const calculateStockForDay = (producto, date) => {
+        // 1. Calcular el total de unidades vendidas para este producto
+        const todasLasVentasDelProducto = ventas.filter(v => v.producto === producto.id);
+        const totalVendido = todasLasVentasDelProducto.reduce((acc, v) => acc + v.cantidad, 0);
+
+        // 2. Calcular el stock inicial (stock antes de cualquier venta registrada)
+        // Esto se obtiene sumando el stock actual más todo lo que se ha vendido
+        const stockInicial = producto.stock + totalVendido;
+
+        // 3. Filtrar las ventas que ocurrieron en o antes de la fecha que se está visualizando
+        const ventasHastaFecha = todasLasVentasDelProducto.filter(v => {
+            const ventaDate = new Date(v.fecha_venta);
+            // Asegurarse de comparar solo la parte de la fecha (sin horas)
+            return new Date(ventaDate.toDateString()) <= new Date(date.toDateString());
+        });
+
+        // 4. Sumar las cantidades de las ventas hasta esa fecha
+        const vendidoHastaFecha = ventasHastaFecha.reduce((acc, v) => acc + v.cantidad, 0);
+
+        // 5. El stock en ese día es el stock inicial menos lo que se había vendido hasta entonces
+        return stockInicial - vendidoHastaFecha;
+    };
+
+    if (error) {
+        return (
+            <Card className="shadow border-0 w-100 bg-white p-3">
+                <div className="text-center text-danger">
+                    <p>Error al cargar los datos: {error}</p>
+                </div>
+            </Card>
+        );
+    }
 
     return (
         <Card className="shadow border-0 w-100 bg-white p-3">
@@ -751,7 +768,7 @@ const StockSemanalComponent = ({ productos, ventas }) => {
                 <FormLabel>Seleccionar Semana</FormLabel>
                 <Form.Select
                     value={selectedWeek ? selectedWeek.toISOString() : ''}
-                    onChange={(e) => setSelectedWeek(new Date(e.target.value))}
+                    onChange={(e) => setSelectedWeek(e.target.value ? new Date(e.target.value) : null)}
                 >
                     <option value="">Seleccionar semana...</option>
                     {wednesdays.map((wednesday, index) => (
@@ -762,7 +779,12 @@ const StockSemanalComponent = ({ productos, ventas }) => {
                 </Form.Select>
             </FormGroup>
 
-            {selectedWeek && (
+            {loading ? (
+                <div className="text-center p-4">
+                    <span className="spinner-border text-primary" role="status" />
+                    <p className="mt-2">Cargando datos...</p>
+                </div>
+            ) : selectedWeek && productos.length > 0 ? (
                 <Table responsive hover className="user-table align-items-center">
                     <thead className="bg-light">
                         <tr>
@@ -775,21 +797,14 @@ const StockSemanalComponent = ({ productos, ventas }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {allProducts.map(producto => (
+                        {productos.map(producto => (
                             <tr key={producto.id}>
                                 <td>{producto.nombre}</td>
                                 {weekDates.map((date, index) => {
-                                    const ventasDelDia = ventas.filter(v => {
-                                        const ventaDate = new Date(v.fecha_venta);
-                                        return ventaDate.toDateString() === date.toDateString() &&
-                                               v.producto === producto.id;
-                                    });
-                                    const stockVendido = ventasDelDia.reduce((acc, v) => acc + v.cantidad, 0);
-                                    const stockInicial = producto.stock + stockVendido;
-                                    
+                                    const stockDelDia = calculateStockForDay(producto, date);
                                     return (
                                         <td key={index} className="text-center">
-                                            {stockInicial}
+                                            {stockDelDia}
                                         </td>
                                     );
                                 })}
@@ -797,6 +812,14 @@ const StockSemanalComponent = ({ productos, ventas }) => {
                         ))}
                     </tbody>
                 </Table>
+            ) : (
+                <div className="text-center text-muted p-4">
+                    {!selectedWeek ? (
+                        <p>Selecciona una semana para ver el historial de stock</p>
+                    ) : (
+                        <p>No hay productos registrados</p>
+                    )}
+                </div>
             )}
         </Card>
     );
@@ -810,12 +833,24 @@ const InventarioPage = () => {
 
     const fetchData = async () => {
         try {
-            const [productosRes, ventasRes] = await Promise.all([
-                apiClient.get('/productos/'),
-                apiClient.get('/ventas/')
+            const fetchPaginatedData = async (url) => {
+                let results = [];
+                let nextUrl = url;
+                while (nextUrl) {
+                    const res = await apiClient.get(nextUrl);
+                    results = results.concat(res.data.results || res.data);
+                    nextUrl = res.data.next ? res.data.next.split('/api/')[1] : null;
+                }
+                return results;
+            };
+
+            const [productosData, ventasData] = await Promise.all([
+                fetchPaginatedData('productos/'),
+                fetchPaginatedData('ventas/')
             ]);
-            setProductos(productosRes.data.results || productosRes.data);
-            setVentas(ventasRes.data.results || ventasRes.data);
+
+            setProductos(productosData);
+            setVentas(ventasData);
         } catch (error) {
             console.error("Error fetching data:", error);
         }
@@ -867,6 +902,7 @@ const InventarioPage = () => {
                     <TabContent>
                         <TabPane active={activeTab === 'productos'}>
                             <ProductListComponent 
+                                products={productos}
                                 onProductUpdate={handleProductUpdate}
                             />
                         </TabPane>
