@@ -122,6 +122,8 @@ const AdminPage = () => {
                   <CsvImporter title="Importar Socios" endpoint="socios" />
                   <CsvImporter title="Importar Pagos" endpoint="pagos" />
                   <CsvImporter title="Importar Inventario" endpoint="productos" />
+                  <CsvImporter title="Importar Ventas" endpoint="ventas" />
+                  <CsvImporter title="Importar Gastos" endpoint="gastos" />
                 </Card.Body>
               </Card>
             </Col>
@@ -148,6 +150,87 @@ const AdminPage = () => {
                       <FontAwesomeIcon icon={faDownload} className="me-2" />Exportar Gastos
                     </Button>
                   </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+          <Row className="g-4">
+            <Col xs={12}>
+              <Card className="shadow-sm">
+                <Card.Body>
+                  <Card.Title as="h4" className="mb-4 text-primary">
+                    <FontAwesomeIcon icon={faFileCsv} className="me-2" />Plantillas CSV de Ejemplo
+                  </Card.Title>
+                  <p className="text-muted mb-3">
+                    Descarga estos archivos de ejemplo para entender el formato requerido para cada tipo de importación:
+                  </p>
+                  <Row className="g-3">
+                    <Col xs={12} sm={6} md={4}>
+                      <Button 
+                        variant="outline-secondary" 
+                        size="sm" 
+                        className="w-100"
+                        onClick={() => downloadCSV([
+                          {ci: '1234567', nombre: 'Juan Pérez', celular: '099123456', contacto_emergencia: 'Maria Pérez', emergencia_movil: '099654321', fecha_nacimiento: '1990-05-15', tipo_cuota: 'Mensual', enfermedades: 'Diabetes', comentarios: 'Alergia a penicilina'},
+                          {ci: '2345678', nombre: 'Ana García', celular: '098765432', contacto_emergencia: 'Carlos García', emergencia_movil: '097654321', fecha_nacimiento: '1985-12-03', tipo_cuota: 'Anual', enfermedades: '', comentarios: ''}
+                        ], 'socios_ejemplo.csv')}
+                      >
+                        <FontAwesomeIcon icon={faDownload} className="me-2" />Socios
+                      </Button>
+                    </Col>
+                    <Col xs={12} sm={6} md={4}>
+                      <Button 
+                        variant="outline-secondary" 
+                        size="sm" 
+                        className="w-100"
+                        onClick={() => downloadCSV([
+                          {ci: '1234567', mes: '1', año: '2025', monto: '50000', fecha_pago: '2025-01-15', metodo_pago: 'Efectivo'},
+                          {ci: '2345678', mes: '1', año: '2025', monto: '50000', fecha_pago: '2025-01-20', metodo_pago: 'Transferencia'}
+                        ], 'pagos_ejemplo.csv')}
+                      >
+                        <FontAwesomeIcon icon={faDownload} className="me-2" />Pagos
+                      </Button>
+                    </Col>
+                    <Col xs={12} sm={6} md={4}>
+                      <Button 
+                        variant="outline-secondary" 
+                        size="sm" 
+                        className="w-100"
+                        onClick={() => downloadCSV([
+                          {nombre: 'Agua', precio_venta: '5000', precio_costo: '3000', stock: '100'},
+                          {nombre: 'Proteína', precio_venta: '25000', precio_costo: '18000', stock: '50'}
+                        ], 'productos_ejemplo.csv')}
+                      >
+                        <FontAwesomeIcon icon={faDownload} className="me-2" />Productos
+                      </Button>
+                    </Col>
+                    <Col xs={12} sm={6} md={4}>
+                      <Button 
+                        variant="outline-secondary" 
+                        size="sm" 
+                        className="w-100"
+                        onClick={() => downloadCSV([
+                          {producto_nombre: 'Agua', cantidad: '2', fecha_venta: '2025-01-15'},
+                          {producto_nombre: 'Proteína', cantidad: '1', fecha_venta: '2025-01-16'}
+                        ], 'ventas_ejemplo.csv')}
+                      >
+                        <FontAwesomeIcon icon={faDownload} className="me-2" />Ventas
+                      </Button>
+                    </Col>
+                    <Col xs={12} sm={6} md={4}>
+                      <Button 
+                        variant="outline-secondary" 
+                        size="sm" 
+                        className="w-100"
+                        onClick={() => downloadCSV([
+                          {concepto: 'Luz', monto: '150000', fecha: '2025-01-15', categoria: 'Servicios', descripcion: 'Factura de electricidad enero'},
+                          {concepto: 'Mantenimiento', monto: '75000', fecha: '2025-01-20', categoria: 'Equipamiento', descripcion: 'Reparación de máquinas'}
+                        ], 'gastos_ejemplo.csv')}
+                      >
+                        <FontAwesomeIcon icon={faDownload} className="me-2" />Gastos
+                      </Button>
+                    </Col>
+                  </Row>
                 </Card.Body>
               </Card>
             </Col>

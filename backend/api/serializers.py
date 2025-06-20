@@ -10,6 +10,7 @@ class SocioSerializer(serializers.ModelSerializer):
     # 3. Con `format="%Y-%m-%d"`, le decimos que lo represente como un string de solo fecha (AAAA-MM-DD).
     # 4. Con `read_only=True`, confirmamos que este campo no se puede escribir a través de la API.
     fecha_registro = serializers.DateField(format="%Y-%m-%d", read_only=True)
+    foto = serializers.SerializerMethodField()
 
     class Meta:
         model = Socio
@@ -22,6 +23,14 @@ class SocioSerializer(serializers.ModelSerializer):
         ]
         # Solo 'fecha_registro' es read_only
         read_only_fields = ['fecha_registro']
+    
+    def get_foto(self, obj):
+        if obj.foto:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.foto.url)
+            return obj.foto.url
+        return None
 
 class PagoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -31,6 +40,7 @@ class PagoSerializer(serializers.ModelSerializer):
 class ProductoSerializer(serializers.ModelSerializer):
     # --- CAMBIO 1: Usamos un SerializerMethodField para un cálculo explícito ---
     ganancia = serializers.SerializerMethodField()
+    foto = serializers.SerializerMethodField()
 
     class Meta:
         model = Producto
@@ -43,6 +53,14 @@ class ProductoSerializer(serializers.ModelSerializer):
         if obj.precio_venta is not None and obj.precio_costo is not None:
             return obj.precio_venta - obj.precio_costo
         return 0
+    
+    def get_foto(self, obj):
+        if obj.foto:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.foto.url)
+            return obj.foto.url
+        return None
 
 class VentaSerializer(serializers.ModelSerializer):
     class Meta:

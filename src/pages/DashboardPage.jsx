@@ -45,8 +45,13 @@ const getImageUrl = (imagePath) => {
         return imagePath;
     }
     
-    // Si es una ruta relativa, la combinamos con la URL base
-    return `${baseURL}${imagePath}`;
+    // Si es una ruta relativa que empieza con /media/, la combinamos con la URL base
+    if (imagePath.startsWith('/media/')) {
+        return `${baseURL}${imagePath}`;
+    }
+    
+    // Si es una ruta relativa sin /media/, la combinamos con la URL base y /media/
+    return `${baseURL}/media/${imagePath}`;
 };
 
 const DashboardPage = () => {
@@ -397,28 +402,14 @@ const DashboardPage = () => {
                         <Modal.Body>
                             <ListGroup variant="flush">
                                 {productos.map((producto) => (
-                                    <ListGroup.Item key={producto.id} className="d-flex align-items-center">
-                                        <div className="me-3">
-                                            {producto.foto && (
-                                                <Image 
-                                                    src={getImageUrl(producto.foto)} 
-                                                    alt={producto.nombre}
-                                                    style={{ 
-                                                        width: '50px', 
-                                                        height: '50px', 
-                                                        objectFit: 'cover',
-                                                        borderRadius: '8px'
-                                                    }}
-                                                />
-                                            )}
-                                        </div>
-                                        <div className="flex-grow-1">
+                                    <ListGroup.Item key={producto.id} className="d-flex justify-content-between align-items-center">
+                                        <div>
                                             <h6 className="mb-0">{producto.nombre}</h6>
                                             <small className="text-muted">
-                                                Precio: ${producto.precio}
+                                                Precio: ${producto.precio_venta}
                                             </small>
                                         </div>
-                                        <div className="text-end">
+                                        <div>
                                             <h5 className="mb-0 text-success">
                                                 Stock: {producto.stock}
                                             </h5>

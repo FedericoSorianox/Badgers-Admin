@@ -10,6 +10,7 @@ from pathlib import Path
 import os
 import dj_database_url
 from dotenv import load_dotenv # <-- Importar
+from datetime import timedelta
 
 
 load_dotenv() # <-- Cargar las variables del .env
@@ -82,18 +83,20 @@ WSGI_APPLICATION = 'badgers_project.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-import dj_database_url
-
-# ...
-
-# Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': dj_database_url.config(conn_max_age=600, ssl_require=False)
-}
+if 'DATABASE_URL' in os.environ and os.environ['DATABASE_URL']:
+    DATABASES = {
+        'default': dj_database_url.config(conn_max_age=600, ssl_require=False)
+    }
+else:
+    print("ADVERTENCIA: DATABASE_URL no encontrada. Usando SQLite como base de datos local.")
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 # La variable ssl_require=True puede ser necesaria para conexiones en producción.
 # dj_database_url.config() buscará automáticamente la variable de entorno 'DATABASE_URL'.
 
@@ -179,15 +182,42 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
-# Configuración de Medios (para las fotos)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# --- Configuración para AWS S3 ---
+# Usa la nueva variable STORAGES para Django 4.2+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+    },
+}
 
-# Configuración adicional para servir archivos de medios
-FILE_UPLOAD_PERMISSIONS = 0o644
-FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
+# --- Credenciales y configuración del Bucket ---
+# ¡IMPORTANTE! No escribas tus claves secretas aquí. Usa variables de entorno.
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID', 'TU_ACCESS_KEY_ID_DE_AWS')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY', 'TU_SECRET_ACCESS_KEY_DE_AWS')
+AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME', 'el-nombre-de-tu-bucket') # El nombre que creaste en el Paso 1
+AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME', 'us-east-1') # La región donde creaste tu bucket
 
-from datetime import timedelta
+# Esto asegura que las URL generadas sean correctas
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+
+# Opcional: Para organizar tus archivos dentro del bucket
+AWS_LOCATION = 'media'
+MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
+
+# Configuración adicional para S3
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+# Deshabilitar ACLs ya que el bucket no los permite
+AWS_DEFAULT_ACL = None
+AWS_QUERYSTRING_AUTH = False
+
+# Configuración de Medios (para las fotos) - Comentado porque ahora usa S3
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = BASE_DIR / 'media'
 
 # Configuración de Django REST Framework Simple JWT
 SIMPLE_JWT = {

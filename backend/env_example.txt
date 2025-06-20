@@ -1,0 +1,12 @@
+# Variables de entorno para AWS S3
+# Copia este archivo como .env y reemplaza los valores con tus credenciales reales
+
+# Credenciales de AWS
+AWS_ACCESS_KEY_ID=tu_access_key_id_aqui
+AWS_SECRET_ACCESS_KEY=tu_secret_access_key_aqui
+AWS_STORAGE_BUCKET_NAME=el-nombre-de-tu-bucket
+AWS_S3_REGION_NAME=us-east-1
+
+# Otras variables de entorno que puedas necesitar
+DATABASE_URL=tu_database_url_aqui
+SECRET_KEY=tu_secret_key_aqui 

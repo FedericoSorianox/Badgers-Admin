@@ -206,12 +206,117 @@ class VentaViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+    @action(detail=False, methods=['post'], parser_classes=[MultiPartParser])
+    def import_csv(self, request, *args, **kwargs):
+        csv_file = request.FILES.get('file')
+        if not csv_file:
+            return Response({"error": "No se proporcionó ningún archivo"}, status=status.HTTP_400_BAD_REQUEST)
+
+        decoded_file = csv_file.read().decode('utf-8')
+        io_string = io.StringIO(decoded_file)
+        reader = csv.DictReader(io_string)
+        
+        success_count = 0
+        error_count = 0
+        errors = []
+
+        for row in reader:
+            try:
+                # Buscar el producto por nombre
+                producto_nombre = row.get('producto_nombre', '').strip()
+                if not producto_nombre:
+                    raise ValueError("El nombre del producto es requerido")
+                
+                try:
+                    producto = Producto.objects.get(nombre=producto_nombre)
+                except Producto.DoesNotExist:
+                    raise ValueError(f"Producto '{producto_nombre}' no encontrado")
+                
+                cantidad = int(row.get('cantidad', 1))
+                if cantidad <= 0:
+                    raise ValueError("La cantidad debe ser mayor a 0")
+                
+                # Verificar stock disponible
+                if producto.stock < cantidad:
+                    raise ValueError(f"Stock insuficiente para '{producto_nombre}'. Disponible: {producto.stock}, Solicitado: {cantidad}")
+                
+                # Calcular total de venta
+                total_venta = producto.precio_venta * cantidad
+                
+                # Crear la venta
+                venta = Venta.objects.create(
+                    producto=producto,
+                    cantidad=cantidad,
+                    total_venta=total_venta,
+                    fecha_venta=parse_date_from_csv(row.get('fecha_venta')) or datetime.now()
+                )
+                
+                # Actualizar stock del producto
+                producto.stock -= cantidad
+                producto.save()
+                
+                success_count += 1
+            except Exception as e:
+                error_count += 1
+                errors.append(f"Fila con Producto {row.get('producto_nombre', 'N/A')}: {str(e)}")
+
+        return Response({
+            "message": f"Importación completada. {success_count} ventas importadas, {error_count} errores.",
+            "errors": errors
+        }, status=status.HTTP_200_OK)
+
 
 class GastoViewSet(viewsets.ModelViewSet):
     queryset = Gasto.objects.all().order_by('-fecha')
     serializer_class = GastoSerializer
     permission_classes = [IsAuthenticated]
     
+    @action(detail=False, methods=['post'], parser_classes=[MultiPartParser])
+    def import_csv(self, request, *args, **kwargs):
+        csv_file = request.FILES.get('file')
+        if not csv_file:
+            return Response({"error": "No se proporcionó ningún archivo"}, status=status.HTTP_400_BAD_REQUEST)
+
+        decoded_file = csv_file.read().decode('utf-8')
+        io_string = io.StringIO(decoded_file)
+        reader = csv.DictReader(io_string)
+        
+        success_count = 0
+        error_count = 0
+        errors = []
+
+        for row in reader:
+            try:
+                concepto = row.get('concepto', '').strip()
+                if not concepto:
+                    raise ValueError("El concepto es requerido")
+                
+                monto = float(row.get('monto', 0))
+                if monto <= 0:
+                    raise ValueError("El monto debe ser mayor a 0")
+                
+                fecha = parse_date_from_csv(row.get('fecha'))
+                if not fecha:
+                    raise ValueError("La fecha es requerida y debe tener formato válido (YYYY-MM-DD, DD/MM/YYYY, o DD-MM-YYYY)")
+                
+                Gasto.objects.create(
+                    concepto=concepto,
+                    monto=monto,
+                    fecha=fecha,
+                    categoria=row.get('categoria', '').strip() or None,
+                    descripcion=row.get('descripcion', '').strip() or None
+                )
+                
+                success_count += 1
+            except Exception as e:
+                error_count += 1
+                errors.append(f"Fila con Concepto {row.get('concepto', 'N/A')}: {str(e)}")
+
+        return Response({
+            "message": f"Importación completada. {success_count} gastos importados, {error_count} errores.",
+            "errors": errors
+        }, status=status.HTTP_200_OK)
+
 class DashboardStatsView(APIView):
     def get(self, request, *args, **kwargs):
         active_socios_count = Socio.objects.filter(activo=True).count()
@@ -221,7 +326,7 @@ class DashboardStatsView(APIView):
         stats = {
             'socios_activos': active_socios_count,
             'productos_en_inventario': products_in_inventory_count,
-            'productos': ProductoSerializer(products_in_inventory, many=True).data
+            'productos': ProductoSerializer(products_in_inventory, many=True, context={'request': request}).data
         }
         return Response(stats)
 
