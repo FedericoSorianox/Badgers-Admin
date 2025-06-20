@@ -195,10 +195,10 @@ STORAGES = {
 
 # --- Credenciales y configuración del Bucket ---
 # ¡IMPORTANTE! No escribas tus claves secretas aquí. Usa variables de entorno.
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID', 'TU_ACCESS_KEY_ID_DE_AWS')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY', 'TU_SECRET_ACCESS_KEY_DE_AWS')
-AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME', 'el-nombre-de-tu-bucket') # El nombre que creaste en el Paso 1
-AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME', 'us-east-1') # La región donde creaste tu bucket
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME') # El nombre que creaste en el Paso 1
+AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME') # La región donde creaste tu bucket
 
 # Esto asegura que las URL generadas sean correctas
 AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
